@@ -1,5 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
+<<<<<<< HEAD
 import { Link } from 'expo-router';
+=======
+>>>>>>> 37102543da76530bab12a250e1152344b7d7ff75
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -53,9 +56,13 @@ export default function App() {
           secureTextEntry={true}
         />
 
+<<<<<<< HEAD
         <Link href="/forgot-password" style={styles.forgotPasswordContainer}>
           <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
         </Link>
+=======
+        <Text style={styles.forgotPassword}>Forgot your password?</Text>
+>>>>>>> 37102543da76530bab12a250e1152344b7d7ff75
 
         <TouchableOpacity style={styles.buttonContainer}>
           <LinearGradient
@@ -67,6 +74,11 @@ export default function App() {
             <Text style={styles.textButton}>SIGN IN</Text>
           </LinearGradient>
         </TouchableOpacity>
+<<<<<<< HEAD
+=======
+
+        <Text style={styles.createAccount}>Don't have an account? <Text style={{fontWeight: 'bold'}}>Create</Text></Text>
+>>>>>>> 37102543da76530bab12a250e1152344b7d7ff75
         
         <StatusBar style="auto" />
       </View>
@@ -115,6 +127,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+<<<<<<< HEAD
   forgotPasswordContainer: {
     width: '80%',
     alignItems: 'flex-end',
@@ -123,6 +136,14 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: 14,
     color: 'gray',
+=======
+  forgotPassword: {
+    fontSize: 14,
+    color: "gray",
+    width: '80%',
+    textAlign: 'right',
+    marginTop: 10,
+>>>>>>> 37102543da76530bab12a250e1152344b7d7ff75
   },
   buttonContainer: {
     width: '50%',
@@ -145,4 +166,11 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+<<<<<<< HEAD
+=======
+  createAccount: {
+    fontSize: 14,
+    color: "gray",
+  },
+>>>>>>> 37102543da76530bab12a250e1152344b7d7ff75
 });
