@@ -1,9 +1,11 @@
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
-import React from 'react';
-import { Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Svg, { Defs, Path, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
+import { auth } from '../firebase';
 
 const { width } = Dimensions.get('window');
 
@@ -29,6 +31,26 @@ function SvgTop() {
 }
 
 export default function ForgotPassword() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      Alert.alert('Error', 'Please enter your email address.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert('Check Your Email', 'A password reset link has been sent to your email address.');
+      setEmail('');
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.mainContainer}>
       <View style={styles.containerSvg}>
@@ -41,16 +63,23 @@ export default function ForgotPassword() {
           style={styles.inputs}
           placeholder='example@gmail.com'
           keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
         />
-        <TouchableOpacity style={styles.buttonContainer}>
-          <LinearGradient
-            colors={['#FFB677', '#FF3CBD']}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
-            style={styles.gradient}
-          >
-            <Text style={styles.textButton}>SEND</Text>
-          </LinearGradient>
+        <TouchableOpacity style={styles.buttonContainer} onPress={handlePasswordReset} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <LinearGradient
+              colors={['#FFB677', '#FF3CBD']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
+              style={styles.gradient}
+            >
+              <Text style={styles.textButton}>SEND</Text>
+            </LinearGradient>
+          )}
         </TouchableOpacity>
         <Link href="/" asChild>
             <TouchableOpacity>
