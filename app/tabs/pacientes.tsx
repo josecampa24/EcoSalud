@@ -7,50 +7,53 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View
+  TouchableOpacity
 } from 'react-native';
 import { db } from '../../firebase';
 
-type Paciente = {
+type Registro = {
   id: string;
   nombre: string;
   edad: number;
-  tipoSangre: string;
-  alergias: string;
+  altura: number;
+  peso: number;
+  temperatura: number;
+  presion: string;
 };
 
-export default function Pacientes() {
+export default function Registros() {
   const router = useRouter();
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [registros, setRegistros] = useState<Registro[]>([]);
 
   useEffect(() => {
-  const unsubscribe = onSnapshot(collection(db, 'pacientes'), (snapshot) => {
-    const lista: Paciente[] = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...(doc.data() as Omit<Paciente, 'id'>)
-    }));
+    const unsubscribe = onSnapshot(collection(db, 'registros'), (snapshot) => {
+      const lista: Registro[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Registro, 'id'>)
+      }));
 
-    setPacientes(lista);
-  });
+      setRegistros(lista);
+    });
 
-  return () => unsubscribe();
-}, []);
+    return () => unsubscribe();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Lista de Pacientes</Text>
+      <Text style={styles.title}>Lista de Registros</Text>
 
       <FlatList
-        data={pacientes}
+        data={registros}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.nombre}>{item.nombre}</Text>
-            <Text>Edad: {item.edad}</Text>
-            <Text>Tipo de sangre: {item.tipoSangre}</Text>
-          </View>
-        )}
+  <TouchableOpacity
+    style={styles.card}
+    onPress={() => router.push(`/patient-profile?id=${item.id}`)}
+  >
+    <Text style={styles.nombre}>{item.nombre}</Text>
+    <Text>Edad: {item.edad}</Text>
+  </TouchableOpacity>
+)}
       />
 
       <TouchableOpacity
@@ -65,55 +68,41 @@ export default function Pacientes() {
 
 const styles = StyleSheet.create({
   container: {
-  flex: 1,
-  backgroundColor: '#f5f6fa',
-  padding: 20,
-},
+    flex: 1,
+    backgroundColor: '#f5f6fa',
+    padding: 20,
+  },
 
-title: {
-  fontSize: 24,
-  fontWeight: 'bold',
-  marginBottom: 15,
-},
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
 
-card: {
-  backgroundColor: 'white',
-  padding: 15,
-  borderRadius: 12,
-  marginBottom: 12,
-  elevation: 3,
-},
+  card: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 3,
+  },
 
-nombre: {
-  fontWeight: 'bold',
-  fontSize: 16,
-  marginBottom: 4,
-},
+  nombre: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 4,
+  },
 
-fab: {
-  position: 'absolute',
-  bottom: 30,
-  right: 30,
-  backgroundColor: '#1E88E5',
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  justifyContent: 'center',
-  alignItems: 'center',
-  elevation: 6,
-},
-  button: {
-  marginTop: 20,
-  backgroundColor: '#2563eb',
-  padding: 15,
-  borderRadius: 10,
-  alignItems: 'center',
-},
-
-buttonText: {
-  color: 'white',
-  fontWeight: 'bold',
-  fontSize: 16,
-},
-
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    backgroundColor: '#1E88E5',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+  },
 });
