@@ -23,7 +23,7 @@ export default function App() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.replace('/home'); // Assuming you have a home screen
+      router.replace('/tabs/pacientes'); // Assuming you have a home screen
     } catch (error: any) {
       Alert.alert('Sign In Failed', error.message);
     } finally {
