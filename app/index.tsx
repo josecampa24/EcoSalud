@@ -40,8 +40,8 @@ export default function App() {
       >
         <Defs>
           <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#FFB677" stopOpacity="1" />
-            <Stop offset="1" stopColor="#FF3CBD" stopOpacity="1" />
+            <Stop offset="0" stopColor="#1E5FA8" stopOpacity="1" />
+            <Stop offset="1" stopColor="#2FA4D6" stopOpacity="1" />
           </SvgLinearGradient>
         </Defs>
         <Path
@@ -87,7 +87,7 @@ export default function App() {
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <LinearGradient
-              colors={['#FFB677', '#FF3CBD']}
+              colors={['#2FA4D6', '#1E5FA8',]}
               start={{x: 0, y: 0}}
               end={{x: 1, y: 0}}
               style={styles.gradient}

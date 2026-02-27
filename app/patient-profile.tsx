@@ -22,8 +22,9 @@ type Paciente = {
   peso: number;
   temperatura: number;
   presion: string;
-  sintomas?: string;
+  sintomas?: string[];
   diagnostico?: string;
+  recomendaciones?: string;
 };
 
 export default function PatientProfile() {
@@ -54,7 +55,7 @@ export default function PatientProfile() {
         {/* Header */}
         <View style={styles.header}>
           <LinearGradient
-            colors={['#ff8fb4', '#ff7fd8', '#ff9ce0']}
+            colors={['#2FA4D6', '#1E5FA8',]}
             style={styles.headerGradient}
           />
         </View>
@@ -108,19 +109,34 @@ export default function PatientProfile() {
 
         </View>
 
-        {/* Síntomas */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Síntomas</Text>
-          <Text style={styles.sectionText}>
-            {paciente.sintomas || 'No registrados'}
-          </Text>
-        </View>
+<View style={styles.sectionCard}>
+  <Text style={styles.sectionTitle}>Síntomas</Text>
+
+  {paciente.sintomas && paciente.sintomas.length > 0 ? (
+    paciente.sintomas.map((s, i) => (
+      <Text key={i} style={styles.sectionText}>
+        • {s}
+      </Text>
+    ))
+  ) : (
+    <Text style={styles.sectionText}>
+      No registrados
+    </Text>
+  )}
+</View>
 
         {/* Diagnóstico */}
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Diagnóstico</Text>
           <Text style={styles.sectionText}>
             {paciente.diagnostico || 'No registrado'}
+          </Text>
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Recomendaciones</Text>
+          <Text style={styles.sectionText}>
+            {paciente.recomendaciones || 'No registrado'}
           </Text>
         </View>
 
@@ -213,5 +229,6 @@ const styles = StyleSheet.create({
   sectionText: {
     fontSize: 14,
     color: '#374151',
+    marginBottom: 4,
   },
 });

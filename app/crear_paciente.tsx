@@ -23,10 +23,143 @@ export default function NuevoRegistro() {
   const [peso, setPeso] = useState('');
   const [temperatura, setTemperatura] = useState('');
   const [presion, setPresion] = useState('');
-  const [sintomas, setSintomas] = useState('');
+  const [sintomasSeleccionados, setSintomasSeleccionados] = useState<string[]>([]);
+  const [otrosSintomas, setOtrosSintomas] = useState('');
   const [diagnostico, setDiagnostico] = useState('');
   const [nombre, setNombre] = useState('');
   const [edad, setEdad] = useState('');
+  const [recomendaciones, setRecomendaciones] = useState('');
+
+  const sintomasData = {
+  Generales: [
+    "Fiebre",
+    "Escalofríos",
+    "Fatiga",
+    "Debilidad",
+    "Pérdida de peso involuntaria",
+    "Aumento de peso",
+    "Sudoración nocturna",
+    "Malestar general",
+    "Pérdida de apetito",
+    "Deshidratacion",
+  ],
+  Neurológicos: [
+    "Dolor de cabeza",
+    "Migraña",
+    "Mareo",
+    "Vértigo",
+    "Desmayo",
+    "Convulsiones",
+    "Confusión",
+    "Hormigueo",
+    "Temblores",
+    "Entumecimiento",
+    "Alteracion del habla",
+    "Alteracion visual",
+    "Sensiblidad a la luz",
+  ],
+  Cardiovasculares: [
+    "Dolor en el pecho",
+    "Palpitaciones",
+    "Taquicardia",
+    "Dificultad para respirar",
+    "Hinchazón en piernas",
+    "Presión arterial elevada",
+    "Presion baja",
+    "Cianosis",
+    "Dolor irradiado a brazo",
+  ],
+  Respiratorios: [
+    "Tos seca",
+    "Tos con flema",
+    "Congestión nasal",
+    "Dolor de garganta",
+    "Secrecopn nasal",
+    "Dolor al respirar",
+    "Sibilancias",
+    "Ronquera",
+    "Expectoracion con sangre",
+  ],
+  Gastrointestinales: [
+    "Náuseas",
+    "Vómitos",
+    "Diarrea",
+    "Estreñimiento",
+    "Dolor abdominal",
+    "Distension abdominal",
+    "Acidez",
+    "Reflujo",
+    "Sangrado Rectal",
+    "Heces osuras",
+    "Perdida de apetito",
+    "Ictericia",
+  ],
+   Genitourinarios: [
+    "Ardor al orinar",
+    "Orina Frecuente",
+    "Dolor pelvico",
+    "Sangrado urinario",
+    "Flujo vaginal anormal",
+    "Dolor testicular",
+    "Disfuncion erectil",
+    "Amenorrea",
+    "Dolor Menstural",
+    "Embarazo sospechado",
+  ], 
+   Musculo: [
+    "Dolor muscular",
+    "Dolor articular",
+    "Rigidez",
+    "Inflamacion",
+    "Calambres",
+    "Espasmos",
+    "Dolor Lumbar",
+    "Dolor Cervical",
+  ], 
+   Dermatologicos: [
+    "Erupcion",
+    "Comezon",
+    "Enrojecimiento",
+    "Lesiones cutaneas",
+    "Moretones faciles",
+    "Caida de cabello",
+    "Uñas fragiles",
+    "Cambio de coloracion",
+    "Hinchazon facial",
+  ], 
+  Psiquiátricos: [
+    "Ansiedad",
+    "Depresión",
+    "Insomnio",
+    "Irritabilidad",
+    "Ataques de pánico",
+    "Cambios de humor",
+    "Perdida de Interes",
+  ], 
+  Oculares: [
+    "Vision borrosa",
+    "Dolor ocular",
+    "Lagrimeo",
+    "Fotofobia",
+    "Secrecion ocular",
+    "Ojos rojos",
+  ], 
+   Otorrinolaringologicas: [
+    "Dolor de oido",
+    "Zumbido",
+    "Perdida de auditiva",
+    "Dolor facial",
+    "Dificultad para tragar",
+  ], 
+   Endocrino: [
+    "Sed excesiva",
+    "Hambre excesiva",
+    "Miccion frecuente",
+    "Intolerancia al frio",
+    "Intolerancia al calor",
+    "Cambios hormonales",
+  ], 
+};
 
   const guardarRegistro = async () => {
     if (!altura || !peso) {
@@ -42,8 +175,12 @@ export default function NuevoRegistro() {
         peso: Number(peso),
         temperatura: Number(temperatura),
         presion,
-        sintomas,
+        sintomas: [
+  ...sintomasSeleccionados,
+  ...(otrosSintomas ? [otrosSintomas] : []),
+],
         diagnostico,
+        recomendaciones,
         createdAt: new Date()
       });
 
@@ -54,6 +191,16 @@ export default function NuevoRegistro() {
       Alert.alert('Error', 'No se pudo guardar el registro');
     }
   };
+
+  const toggleSintoma = (sintoma: string) => {
+  if (sintomasSeleccionados.includes(sintoma)) {
+    setSintomasSeleccionados(
+      sintomasSeleccionados.filter((s) => s !== sintoma)
+    );
+  } else {
+    setSintomasSeleccionados([...sintomasSeleccionados, sintoma]);
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -81,7 +228,7 @@ export default function NuevoRegistro() {
           <Text style={styles.photoLabel}>Foto del Paciente</Text>
         </View>
 
-        <Text style={styles.section}>SIGNOS VITALES</Text>
+        <Text style={styles.section}>DATOS DEL PACIENTE</Text>
 
         <View style={styles.row}>
   <TextInput
@@ -141,14 +288,45 @@ export default function NuevoRegistro() {
 
         <Text style={styles.section}>SÍNTOMAS</Text>
 
-        <TextInput
-          placeholder="Describa los síntomas presentados..."
-          placeholderTextColor="#000"
-          style={styles.textArea}
-          multiline
-          value={sintomas}
-          onChangeText={setSintomas}
+{Object.entries(sintomasData).map(([categoria, lista]) => (
+  <View key={categoria}>
+    <Text style={{ fontWeight: '600', marginBottom: 5 }}>
+      {categoria}
+    </Text>
+
+    {lista.map((sintoma) => (
+      <TouchableOpacity
+        key={sintoma}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 8,
+        }}
+        onPress={() => toggleSintoma(sintoma)}
+      >
+        <Ionicons
+          name={
+            sintomasSeleccionados.includes(sintoma)
+              ? 'checkbox'
+              : 'square-outline'
+          }
+          size={22}
+          color="#1E88E5"
         />
+        <Text style={{ marginLeft: 8 }}>{sintoma}</Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+))}
+
+<TextInput
+  placeholder="Otros síntomas..."
+  placeholderTextColor="#000"
+  style={styles.textArea}
+  multiline
+  value={otrosSintomas}
+  onChangeText={setOtrosSintomas}
+/>
 
         <Text style={styles.section}>DIAGNÓSTICO</Text>
 
@@ -159,6 +337,15 @@ export default function NuevoRegistro() {
           multiline
           value={diagnostico}
           onChangeText={setDiagnostico}
+        />
+
+        <TextInput
+          placeholder="Recomendaciones..."
+          placeholderTextColor="#000"
+          style={styles.textArea}
+          multiline
+          value={recomendaciones}
+          onChangeText={setRecomendaciones}
         />
 
         <TouchableOpacity style={styles.saveButton} onPress={guardarRegistro}>
