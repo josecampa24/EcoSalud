@@ -61,8 +61,8 @@ export default function App() {
       <View style={styles.container}>
         <Text style={styles.titulo}>EcoSalud</Text>
         <Text style={styles.subtitulo}>Sign In to your account</Text>
-        
-        <TextInput 
+
+        <TextInput
           style={styles.inputs}
           placeholder='example@gmail.com'
           keyboardType="email-address"
@@ -70,13 +70,17 @@ export default function App() {
           onChangeText={setEmail}
           autoCapitalize="none"
         />
-        <TextInput 
+        <TextInput
           style={styles.inputs}
           placeholder='password'
           secureTextEntry={true}
           value={password}
           onChangeText={setPassword}
         />
+
+        <Link href="/forgot-password" style={styles.forgotPasswordContainer}>
+          <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
+        </Link>
 
         <TouchableOpacity style={styles.buttonContainer} onPress={handleSignIn} disabled={loading}>
           {loading ? (
@@ -92,7 +96,7 @@ export default function App() {
             </LinearGradient>
           )}
         </TouchableOpacity>
-        
+
         <StatusBar style="auto" />
       </View>
     </View>
@@ -101,7 +105,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   mainContainer: {
-    flex: 1, 
+    flex: 1,
     backgroundColor: '#f1f1f1',
   },
   containerSvg: {
@@ -110,10 +114,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   container: {
-    flex: 1, 
+    flex: 1,
     alignItems: 'center',
     width: width,
-    paddingTop: 10, 
+    paddingTop: 10,
   },
   titulo: {
     fontSize: 55,
@@ -139,6 +143,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  forgotPasswordContainer: {
+    width: '80%',
+    alignItems: 'flex-end',
+    marginTop: 10,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: 'gray',
   },
   buttonContainer: {
     width: '50%',
