@@ -78,10 +78,6 @@ export default function App() {
           onChangeText={setPassword}
         />
 
-        <Link href="/forgot-password" style={styles.forgotPasswordContainer}>
-          <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
-        </Link>
-
         <TouchableOpacity style={styles.buttonContainer} onPress={handleSignIn} disabled={loading}>
           {loading ? (
             <ActivityIndicator size="small" color="#fff" />
@@ -143,15 +139,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-  },
-  forgotPasswordContainer: {
-    width: '80%',
-    alignItems: 'flex-end',
-    marginTop: 10,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: 'gray',
   },
   buttonContainer: {
     width: '50%',
