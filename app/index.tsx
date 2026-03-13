@@ -1,12 +1,35 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { Link, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Svg, { Defs, Path, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
+import { auth } from '../firebase';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export default function App() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSignIn = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.replace('/tabs/pacientes'); // Assuming you have a home screen
+    } catch (error: any) {
+      Alert.alert('Sign In Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   function SvgTop() {
     return (
@@ -17,8 +40,8 @@ export default function App() {
       >
         <Defs>
           <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#FFB677" stopOpacity="1" />
-            <Stop offset="1" stopColor="#FF3CBD" stopOpacity="1" />
+            <Stop offset="0" stopColor="#1E5FA8" stopOpacity="1" />
+            <Stop offset="1" stopColor="#2FA4D6" stopOpacity="1" />
           </SvgLinearGradient>
         </Defs>
         <Path
@@ -31,13 +54,11 @@ export default function App() {
 
   return (
     <View style={styles.mainContainer}>
-      
       <View style={styles.containerSvg}>
         <SvgTop />
       </View>
 
       <View style={styles.container}>
-        {/* AQUI ESTABA EL CAMBIO: De 'Hello' a 'EcoSalud' */}
         <Text style={styles.titulo}>EcoSalud</Text>
         <Text style={styles.subtitulo}>Sign In to your account</Text>
         
@@ -45,27 +66,36 @@ export default function App() {
           style={styles.inputs}
           placeholder='example@gmail.com'
           keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
         />
         <TextInput 
           style={styles.inputs}
           placeholder='password'
           secureTextEntry={true}
+          value={password}
+          onChangeText={setPassword}
         />
 
-        <Text style={styles.forgotPassword}>Forgot your password?</Text>
+        <Link href="/forgot-password" style={styles.forgotPasswordContainer}>
+          <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
+        </Link>
 
-        <TouchableOpacity style={styles.buttonContainer}>
-          <LinearGradient
-            colors={['#FFB677', '#FF3CBD']}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
-            style={styles.gradient}
-          >
-            <Text style={styles.textButton}>SIGN IN</Text>
-          </LinearGradient>
+        <TouchableOpacity style={styles.buttonContainer} onPress={handleSignIn} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <LinearGradient
+              colors={['#2FA4D6', '#1E5FA8',]}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
+              style={styles.gradient}
+            >
+              <Text style={styles.textButton}>SIGN IN</Text>
+            </LinearGradient>
+          )}
         </TouchableOpacity>
-
-        <Text style={styles.createAccount}>Don't have an account? <Text style={{fontWeight: 'bold'}}>Create</Text></Text>
         
         <StatusBar style="auto" />
       </View>
@@ -90,7 +120,7 @@ const styles = StyleSheet.create({
     paddingTop: 10, 
   },
   titulo: {
-    fontSize: 55, // Esto le da el tamaño grande como en la foto
+    fontSize: 55,
     fontWeight: "bold",
     color: "#34434D",
   },
@@ -114,12 +144,14 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  forgotPassword: {
-    fontSize: 14,
-    color: "gray",
+  forgotPasswordContainer: {
     width: '80%',
-    textAlign: 'right',
+    alignItems: 'flex-end',
     marginTop: 10,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: 'gray',
   },
   buttonContainer: {
     width: '50%',
@@ -141,9 +173,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'white',
     fontWeight: 'bold',
-  },
-  createAccount: {
-    fontSize: 14,
-    color: "gray",
   },
 });
