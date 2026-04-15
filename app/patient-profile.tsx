@@ -8,6 +8,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import {
+  Image,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -24,6 +25,7 @@ type Paciente = {
   peso: number;
   temperatura: number;
   presion: string;
+  foto?:string;
   sintomas?: string[];
   diagnostico?: string;
   recomendaciones?: string;
@@ -71,12 +73,19 @@ export default function PatientProfile() {
         {/* Avatar y datos */}
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
-            <MaterialCommunityIcons
-              name="account"
-              size={60}
-              color="#ffffff"
-            />
-          </View>
+  {paciente.foto ? (
+    <Image
+      source={{ uri: paciente.foto }}
+      style={styles.avatarImage}
+    />
+  ) : (
+    <MaterialCommunityIcons
+      name="account"
+      size={60}
+      color="#ffffff"
+    />
+  )}
+</View>
 
           <Text style={styles.name}>{paciente.nombre}</Text>
           <Text style={styles.subtitle}>{paciente.edad} años</Text>
@@ -155,6 +164,12 @@ const styles = StyleSheet.create({
   header: {
     height: 190,
   },
+
+  avatarImage: {
+  width: '100%',
+  height: '100%',
+  borderRadius: 60,
+},
 
   headerGradient: {
     flex: 1,

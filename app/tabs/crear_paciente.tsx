@@ -1,16 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
   Alert,
-  Dimensions,
-  ScrollView,
+  Dimensions, Image, ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { db } from '../../firebase';
 
@@ -19,6 +19,7 @@ const { width } = Dimensions.get('window');
 export default function NuevoRegistro() {
   const router = useRouter();
 
+  const [imagen, setImagen] = useState<string | null>(null);
   const [altura, setAltura] = useState('');
   const [peso, setPeso] = useState('');
   const [temperatura, setTemperatura] = useState('');
@@ -162,12 +163,14 @@ export default function NuevoRegistro() {
   };
 
  const guardarRegistro = async () => {
+  const fotoURL = await subirImagen();
     if (!altura || !peso) {
       Alert.alert('Error', 'Altura y peso son obligatorios');
       return;
     }
 
     try {
+      const fotoURL = await subirImagen();
       await addDoc(collection(db, 'registros'), {
         nombre,
         edad: Number(edad),
@@ -175,6 +178,7 @@ export default function NuevoRegistro() {
         peso: Number(peso),
         temperatura: Number(temperatura),
         presion,
+        foto: fotoURL,
         sintomas: [
           ...sintomasSeleccionados,
           ...(otrosSintomas ? [otrosSintomas] : []),
@@ -203,6 +207,58 @@ export default function NuevoRegistro() {
     }
   };
 
+  const subirImagen = async () => {
+  if (!imagen) return null;
+
+  const data = new FormData();
+
+  data.append('file', {
+    uri: imagen,
+    type: 'image/jpeg',
+    name: 'paciente.jpg',
+  } as any);
+
+  data.append('upload_preset', 'ecosalud');
+
+  try {
+    const res = await fetch(
+      'https://api.cloudinary.com/v1_1/dyt8hywwc/image/upload',
+      {
+        method: 'POST',
+        body: data,
+      }
+    );
+
+    const json = await res.json();
+
+    return json.secure_url;
+  } catch (error) {
+    console.log('Error Cloudinary:', error);
+    return null;
+  }
+};
+
+  const seleccionarImagen = async () => {
+  const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+  if (!permiso.granted) {
+    Alert.alert('Permiso requerido', 'Debes permitir acceso a fotos');
+    return;
+  }
+
+  const resultado = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    quality: 0.7,
+    allowsEditing: true,
+    aspect: [1, 1],
+  });
+
+  if (!resultado.canceled) {
+    setImagen(resultado.assets[0].uri);
+  }
+};
+
+
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -218,9 +274,16 @@ export default function NuevoRegistro() {
         <View style={styles.photoSection}>
           <View style={styles.photoWrapper}>
             <View style={styles.photoCircle}>
-              <Ionicons name="image-outline" size={50} color="#d0d0d0" />
+              {imagen ? (
+  <Image source={{ uri: imagen }} style={styles.photo} />
+) : (
+  <Ionicons name="image-outline" size={50} color="#d0d0d0" />
+)}
             </View>
-            <TouchableOpacity style={styles.cameraButton}>
+            <TouchableOpacity
+  style={styles.cameraButton}
+  onPress={seleccionarImagen}
+>
                 <Ionicons name="camera" size={22} color="white" />
             </TouchableOpacity>
           </View>
