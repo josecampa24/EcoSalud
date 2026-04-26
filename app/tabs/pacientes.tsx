@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { getAuth } from 'firebase/auth';
 import {
   collection,
   deleteDoc,
@@ -34,11 +35,13 @@ import { db } from "../../firebase";
 type Registro = {
   id: string;
   nombre: string;
+  uid?: string;
   edad: number;
   unidadEdad?: "años" | "meses";
   foto?: string;
   createdAt?: any;
   esDuplicado?: boolean;
+  pacienteId?: string;
 };
 
 export default function Registros() {
@@ -66,45 +69,30 @@ export default function Registros() {
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [busqueda, setBusqueda] = useState("");
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "registros"), (snapshot) => {
-      const lista: Registro[] = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: data.createdAt || null,
-        } as Registro;
-      });
+useEffect(() => {
+  const user = getAuth().currentUser;
 
-      // 🔥 Ordenar por fecha (más reciente primero)
-      lista.sort((a, b) => {
-        if (!a.createdAt || !b.createdAt) return 0;
-        return b.createdAt.seconds - a.createdAt.seconds;
-      });
+  if (!user) return;
 
-      const listaConDuplicados = marcarDuplicados(lista);
-      const mapa = new Map<string, Registro>();
+  const q = query(
+    collection(db, "registros"),
+    where("uid", "==", user.uid)
+  );
 
-      lista.forEach((p) => {
-        const key = p.pacienteId || `${p.nombre}-${p.edad}-${p.unidadEdad}`;
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const lista = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Omit<Registro, "id">),
+    }));
 
-        if (!mapa.has(key)) {
-          mapa.set(key, p);
-        } else {
-          const existente = mapa.get(key);
+    // 🔥 aplicar duplicados aquí
+    const listaConDuplicados = marcarDuplicados(lista);
 
-          if (p.createdAt?.seconds > existente?.createdAt?.seconds) {
-            mapa.set(key, p);
-          }
-        }
-      });
+    setRegistros(listaConDuplicados);
+  });
 
-      setRegistros(Array.from(mapa.values()));
-    });
-
-    return () => unsubscribe();
-  }, []);
+  return () => unsubscribe();
+}, []);
 
   // 🔍 BUSCADOR (nombre + fecha)
   const registrosFiltrados = registros.filter((p) => {

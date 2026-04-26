@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { getAuth } from "firebase/auth";
 import {
   addDoc,
   collection,
-  onSnapshot,
-  serverTimestamp,
+  onSnapshot
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -21,7 +21,9 @@ import {
 } from "react-native";
 import { db } from "../../firebase";
 
+
 const { width } = Dimensions.get("window");
+const user = getAuth().currentUser;
 
 export default function NuevoRegistro() {
   const router = useRouter();
@@ -179,11 +181,20 @@ export default function NuevoRegistro() {
   };
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "registros"), (snapshot) => {
+  const user = getAuth().currentUser;
+
+  if (!user) return;
+
+  const unsubscribe = onSnapshot(
+    collection(db, "registros"),
+    (snapshot) => {
       const mapa = new Map();
 
       snapshot.docs.forEach((doc) => {
         const data = doc.data();
+
+        // 🔥 FILTRAR POR USUARIO
+        if (data.uid !== user.uid) return;
 
         if (!data.pacienteId) return;
 
@@ -200,10 +211,11 @@ export default function NuevoRegistro() {
       });
 
       setPacientesExistentes(Array.from(mapa.values()));
-    });
+    }
+  );
 
-    return () => unsubscribe();
-  }, []);
+  return () => unsubscribe();
+}, []);
 
   const pacientesFiltrados = pacientesExistentes.filter((p) =>
     p.nombre?.toLowerCase().includes(busquedaPaciente.toLowerCase()),
@@ -310,49 +322,77 @@ export default function NuevoRegistro() {
     }
   };
 
-  const guardarRegistro = async () => {
-    if (!validarFormulario()) {
-      Alert.alert("Error", "Corrige los campos marcados en rojo.");
-      return;
-    }
+const guardarRegistro = async () => {
+  const user = getAuth().currentUser;
 
-    try {
-      const fotoURL = await subirImagen();
+  if (!user) {
+    Alert.alert("Error", "No hay usuario autenticado");
+    return;
+  }
 
-      const idFinal = pacienteId || nombre.trim().toLowerCase();
+  if (!altura || !peso) {
+    Alert.alert("Error", "Altura y peso son obligatorios");
+    return;
+  }
 
-      await addDoc(collection(db, "registros"), {
-        pacienteId: idFinal,
-        nombre: nombre.trim(),
-        edad: Number(edad),
-        unidadEdad: unidadEdad,
-        altura: Number(altura),
-        peso: Number(peso),
-        temperatura: Number(temperatura),
-        presion: presion.trim(),
-        foto: fotoURL,
-        sintomas: [
-          ...sintomasSeleccionados,
-          ...(otrosSintomas.trim() ? [otrosSintomas.trim()] : []),
-        ],
-        diagnostico: diagnostico.trim(),
-        recomendaciones: recomendaciones.trim(),
-        createdAt: serverTimestamp(),
-      });
+  try {
+    let urlFoto = "";
 
-      Alert.alert("Éxito", "Registro guardado correctamente");
-      limpiarFormulario();
-      setTimeout(() => {
-        router.back();
-      }, 100);
-    } catch (error) {
-      console.error("Error saving record: ", error);
-      Alert.alert(
-        "Error",
-        "No se pudo guardar el registro. Por favor, intente de nuevo.",
+    // 🔥 SI HAY IMAGEN → subirla primero
+    if (imagen) {
+      const data = new FormData();
+
+      data.append("file", {
+        uri: imagen,
+        type: "image/jpeg",
+        name: "foto.jpg",
+      } as any);
+
+      data.append("upload_preset", "ecosalud");
+
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dyt8hywwc/image/upload",
+        {
+          method: "POST",
+          body: data,
+        }
       );
+
+      const json = await res.json();
+      console.log("Cloudinary:", json);
+
+      urlFoto = json.secure_url; // 🔥 AQUÍ
     }
-  };
+
+    // 🔥 AHORA sí guardas en Firestore
+    await addDoc(collection(db, "registros"), {
+      nombre,
+      edad: Number(edad),
+      altura: Number(altura),
+      peso: Number(peso),
+      temperatura: Number(temperatura),
+      presion,
+      sintomas: [
+        ...sintomasSeleccionados,
+        ...(otrosSintomas ? [otrosSintomas] : []),
+      ],
+      diagnostico,
+      recomendaciones,
+      foto: urlFoto,
+      pacienteId: pacienteId || new Date().getTime().toString(),
+      uid: user.uid,
+      createdAt: new Date(),
+    });
+
+    Alert.alert("Éxito", "Registro guardado correctamente");
+    router.back();
+
+  } catch (error) {
+    console.error("ERROR COMPLETO:", error);
+    Alert.alert("Error", "No se pudo guardar el registro");
+  }
+};
+
 
   const toggleSintoma = (sintoma: string) => {
     if (sintomasSeleccionados.includes(sintoma)) {
