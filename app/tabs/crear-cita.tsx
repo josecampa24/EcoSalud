@@ -114,6 +114,22 @@ export default function CrearCita() {
     }
 
     try {
+
+      // 1. construir fecha correcta
+    const [year, month, day] = fecha.split("-");
+
+    const fechaCita = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      hora.getHours(),
+      hora.getMinutes()
+    );
+
+      // ⏰ restar 30 min
+      const recordatorio = new Date(fechaCita);
+      recordatorio.setMinutes(recordatorio.getMinutes() - 240);
+
       await addDoc(collection(db, "citas"), {
         nombrePaciente: pacienteSeleccionado.nombre,
         pacienteId: pacienteSeleccionado.id,
@@ -126,6 +142,10 @@ export default function CrearCita() {
         estado: "pendiente",
         uid: user.uid,
         createdAt: new Date(),
+      
+        recordatorio: recordatorio.toISOString(),
+        fechaCita: fechaCita.toISOString(),
+      
       });
 
       Alert.alert("Éxito", "Cita creada");
@@ -241,12 +261,12 @@ export default function CrearCita() {
                 })}
               </Text>
             </TouchableOpacity>
-
+            
             {mostrarHora && (
               <DateTimePicker
                 value={hora}
                 mode="time"
-                is24Hour={true}
+                is24Hour={false}
                 display="default"
                 onChange={(event, selectedDate) => {
                   setMostrarHora(false);
