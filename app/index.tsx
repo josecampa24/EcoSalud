@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
+  Image,
   StyleSheet,
   Text,
   TextInput,
@@ -20,6 +21,9 @@ import Svg, {
   LinearGradient as SvgLinearGradient,
 } from "react-native-svg";
 import { auth } from "../firebase";
+
+//IMPORT DEL LOGO
+import logo from "../assets/images/logo2.png";
 
 const { width } = Dimensions.get("window");
 
@@ -65,18 +69,11 @@ export default function App() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.replace("/tabs/pacientes");
-    } catch (err) {
-      console.log("ERROR:", err);
-      const error = err as any;
-
-      if (error.code === "auth/user-not-found") {
+    } catch (err: any) {
+      if (err.code === "auth/user-not-found") {
         setErrorEmail("El usuario no existe");
-      } else if (error.code === "auth/wrong-password") {
+      } else if (err.code === "auth/wrong-password") {
         setErrorPassword("Contraseña incorrecta");
-      } else if (error.code === "auth/invalid-email") {
-        setErrorEmail("Correo inválido");
-      } else if (error.code === "auth/invalid-credential") {
-        setErrorGeneral("Credenciales incorrectas");
       } else {
         setErrorGeneral("Error al iniciar sesión");
       }
@@ -90,12 +87,14 @@ export default function App() {
       <Svg width={width} height={250} viewBox={`0 0 ${width} 250`}>
         <Defs>
           <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#1E5FA8" stopOpacity="1" />
-            <Stop offset="1" stopColor="#2FA4D6" stopOpacity="1" />
+            <Stop offset="0" stopColor="#1E5FA8" />
+            <Stop offset="1" stopColor="#2FA4D6" />
           </SvgLinearGradient>
         </Defs>
         <Path
-          d={`M0 0 H${width} V180 C${width} 180 ${width * 0.7} 260 ${width * 0.5} 210 C${width * 0.3} 160 0 220 0 220 V0 Z`}
+          d={`M0 0 H${width} V180 C${width} 180 ${width * 0.7} 260 ${
+            width * 0.5
+          } 210 C${width * 0.3} 160 0 220 0 220 V0 Z`}
           fill="url(#grad)"
         />
       </Svg>
@@ -109,22 +108,25 @@ export default function App() {
       </View>
 
       <View style={styles.container}>
+        {/* LOGO BONITO */}
+        <View style={styles.logoContainer}>
+          <Image source={logo} style={styles.logo} />
+        </View>
+
         <Text style={styles.titulo}>EcoSalud</Text>
         <Text style={styles.subtitulo}>Sign In to your account</Text>
 
         <TextInput
-          style={[styles.inputs, errorEmail ? styles.inputError : {}]}
+          style={[styles.inputs, errorEmail && styles.inputError]}
           placeholder="example@gmail.com"
-          keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
-          autoCapitalize="none"
         />
-        {errorEmail ? <Text style={styles.errorText}>{errorEmail}</Text> : null}
+        {errorEmail && <Text style={styles.errorText}>{errorEmail}</Text>}
 
         <View style={styles.passwordContainer}>
           <TextInput
-            style={[styles.inputFull, errorPassword ? styles.inputError : {}]}
+            style={[styles.inputFull, errorPassword && styles.inputError]}
             placeholder="password"
             secureTextEntry={!showPassword}
             value={password}
@@ -143,16 +145,17 @@ export default function App() {
           </TouchableOpacity>
         </View>
 
-        {errorPassword ? (
+        {errorPassword && (
           <Text style={styles.errorText}>{errorPassword}</Text>
-        ) : null}
-
-        {errorGeneral ? (
+        )}
+        {errorGeneral && (
           <Text style={styles.errorTextGeneral}>{errorGeneral}</Text>
-        ) : null}
+        )}
 
         <Link href="/forgot-password" style={styles.forgotPasswordContainer}>
-          <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
+          <Text style={styles.forgotPasswordText}>
+            Forgot your password?
+          </Text>
         </Link>
 
         <TouchableOpacity
@@ -161,12 +164,10 @@ export default function App() {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator color="#fff" />
           ) : (
             <LinearGradient
               colors={["#2FA4D6", "#1E5FA8"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
               style={styles.gradient}
             >
               <Text style={styles.textButton}>SIGN IN</Text>
@@ -185,112 +186,121 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f1f1f1",
   },
+
   containerSvg: {
     width: width,
-    justifyContent: "flex-start",
-    alignItems: "center",
   },
+
   container: {
     flex: 1,
     alignItems: "center",
-    width: width,
-    paddingTop: 10,
+    marginTop: -60,
   },
+
+  // 🔥 LOGO BONITO
+  logoContainer: {
+    width: 130,
+    height: 130,
+    borderRadius: 35,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    overflow:"hidden",
+  },
+
+  logo: {
+    width: 170,
+    height: 170,
+    borderRadius: 20,
+    resizeMode: "cover",
+  },
+
   titulo: {
-    fontSize: 55,
+    fontSize: 45,
     fontWeight: "bold",
     color: "#34434D",
   },
+
   subtitulo: {
-    fontSize: 18,
+    fontSize: 16,
     color: "gray",
     marginBottom: 20,
   },
+
   inputs: {
     width: "80%",
-    padding: 10,
     height: 50,
-    marginTop: 20,
-    borderRadius: 30,
-    backgroundColor: "white",
-    paddingStart: 20,
-    color: "gray",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderRadius: 25,
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    marginTop: 15,
+    elevation: 3,
   },
+
   passwordContainer: {
     width: "80%",
     position: "relative",
-    justifyContent: "center",
   },
+
   inputFull: {
-    width: "100%",
-    padding: 10,
     height: 50,
-    marginTop: 20,
-    borderRadius: 30,
-    backgroundColor: "white",
-    paddingStart: 20,
+    borderRadius: 25,
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
     paddingRight: 45,
-    color: "gray",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginTop: 15,
+    elevation: 3,
   },
+
   eyeIcon: {
     position: "absolute",
     right: 15,
-    top: 35,
+    top: 28,
   },
+
   inputError: {
-    borderColor: "red",
     borderWidth: 1,
+    borderColor: "red",
   },
+
   errorText: {
     color: "red",
     fontSize: 12,
     width: "80%",
-    marginTop: 5,
   },
+
   errorTextGeneral: {
     color: "red",
-    fontSize: 14,
     marginTop: 10,
-    textAlign: "center",
   },
+
   forgotPasswordContainer: {
     width: "80%",
     alignItems: "flex-end",
     marginTop: 10,
   },
+
   forgotPasswordText: {
-    fontSize: 14,
     color: "gray",
   },
+
   buttonContainer: {
-    width: "50%",
-    marginTop: 30,
-    marginBottom: 20,
+    width: "60%",
+    marginTop: 25,
   },
+
   gradient: {
     padding: 15,
     borderRadius: 30,
     alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
+
   textButton: {
-    fontSize: 16,
-    color: "white",
+    color: "#fff",
     fontWeight: "bold",
   },
 });

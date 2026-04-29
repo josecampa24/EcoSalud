@@ -20,11 +20,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Svg, {
+  Defs,
+  Path,
+  Stop,
+  LinearGradient as SvgLinearGradient,
+} from "react-native-svg";
 import { db } from "../../firebase";
 
-
 const { width } = Dimensions.get("window");
-const user = getAuth().currentUser;
 
 export default function NuevoRegistro() {
   const router = useRouter();
@@ -32,21 +36,21 @@ export default function NuevoRegistro() {
   const [modoSeleccion, setModoSeleccion] = useState(true);
   const [busquedaPaciente, setBusquedaPaciente] = useState("");
   const [pacientesExistentes, setPacientesExistentes] = useState<any[]>([]);
-  const [imagen, setImagen] = useState<string | null>(null);
-  const [altura, setAltura] = useState("");
-  const [peso, setPeso] = useState("");
-  const [temperatura, setTemperatura] = useState("");
-  const [pacienteId, setPacienteId] = useState<string | null>(null);
-  const [presion, setPresion] = useState("");
-  const [sintomasSeleccionados, setSintomasSeleccionados] = useState<string[]>(
-    [],
-  );
 
-  const [otrosSintomas, setOtrosSintomas] = useState("");
-  const [diagnostico, setDiagnostico] = useState("");
+  const [imagen, setImagen] = useState<string | null>(null);
+  const [pacienteId, setPacienteId] = useState<string | null>(null);
+
   const [nombre, setNombre] = useState("");
   const [edad, setEdad] = useState("");
   const [unidadEdad, setUnidadEdad] = useState<"años" | "meses">("años");
+  const [altura, setAltura] = useState("");
+  const [peso, setPeso] = useState("");
+  const [temperatura, setTemperatura] = useState("");
+  const [presion, setPresion] = useState("");
+
+  const [sintomasSeleccionados, setSintomasSeleccionados] = useState<string[]>([]);
+  const [otrosSintomas, setOtrosSintomas] = useState("");
+  const [diagnostico, setDiagnostico] = useState("");
   const [recomendaciones, setRecomendaciones] = useState("");
   const [errores, setErrores] = useState<Record<string, string>>({});
 
@@ -61,7 +65,7 @@ export default function NuevoRegistro() {
       "Sudoración nocturna",
       "Malestar general",
       "Pérdida de apetito",
-      "Deshidratacion",
+      "Deshidratación",
     ],
     Neurológicos: [
       "Dolor de cabeza",
@@ -75,8 +79,8 @@ export default function NuevoRegistro() {
       "Temblores",
       "Entumecimiento",
       "Alteración del habla",
-      "Alteracion visual",
-      "Sensiblidad a la luz",
+      "Alteración visual",
+      "Sensibilidad a la luz",
     ],
     Cardiovasculares: [
       "Dolor en el pecho",
@@ -109,41 +113,41 @@ export default function NuevoRegistro() {
       "Distensión abdominal",
       "Acidez",
       "Reflujo",
-      "Sangrado Rectal",
-      "Heces osuras",
-      "Perdida de apetito",
+      "Sangrado rectal",
+      "Heces oscuras",
+      "Pérdida de apetito",
       "Ictericia",
     ],
     Genitourinarios: [
       "Ardor al orinar",
-      "Orina Frecuente",
-      "Dolor pelvico",
+      "Orina frecuente",
+      "Dolor pélvico",
       "Sangrado urinario",
       "Flujo vaginal anormal",
       "Dolor testicular",
-      "Disfunción erectil",
+      "Disfunción eréctil",
       "Amenorrea",
-      "Dolor Menstural",
+      "Dolor menstrual",
       "Embarazo sospechado",
     ],
-    Musculo: [
+    Musculoesqueléticos: [
       "Dolor muscular",
       "Dolor articular",
       "Rigidez",
       "Inflamación",
       "Calambres",
       "Espasmos",
-      "Dolor Lumbar",
-      "Dolor Cervical",
+      "Dolor lumbar",
+      "Dolor cervical",
     ],
-    Dermatologicos: [
+    Dermatológicos: [
       "Erupción",
       "Comezón",
       "Enrojecimiento",
-      "Lesiones cutaneas",
+      "Lesiones cutáneas",
       "Moretones fáciles",
       "Caída de cabello",
-      "Uñas fragiles",
+      "Uñas frágiles",
       "Cambio de coloración",
       "Hinchazón facial",
     ],
@@ -154,49 +158,77 @@ export default function NuevoRegistro() {
       "Irritabilidad",
       "Ataques de pánico",
       "Cambios de humor",
-      "Perdida de Interés",
+      "Pérdida de interés",
     ],
     Oculares: [
-      "Vision borrosa",
+      "Visión borrosa",
       "Dolor ocular",
       "Lagrimeo",
       "Fotofobia",
-      "Secrecion ocular",
+      "Secreción ocular",
       "Ojos rojos",
     ],
-    Otorrinolaringologicas: [
-      "Dolor de oido",
+    Otorrinolaringológicos: [
+      "Dolor de oído",
       "Zumbido",
-      "Perdida de auditiva",
+      "Pérdida auditiva",
       "Dolor facial",
       "Dificultad para tragar",
     ],
     Endocrino: [
       "Sed excesiva",
       "Hambre excesiva",
-      "Miccion frecuente",
-      "Intolerancia al frio",
+      "Micción frecuente",
+      "Intolerancia al frío",
       "Intolerancia al calor",
       "Cambios hormonales",
     ],
   };
 
+  const HeaderOla = ({
+    titulo,
+    subtitulo,
+  }: {
+    titulo: string;
+    subtitulo: string;
+  }) => (
+    <>
+      <View style={styles.containerSvg}>
+        <Svg width={width} height={220} viewBox={`0 0 ${width} 220`}>
+          <Defs>
+            <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+              <Stop offset="0" stopColor="#1E5FA8" stopOpacity="1" />
+              <Stop offset="1" stopColor="#2FA4D6" stopOpacity="1" />
+            </SvgLinearGradient>
+          </Defs>
+
+          <Path
+            d={`M0 0 H${width} V150 C${width} 150 ${width * 0.7} 220 ${
+              width * 0.5
+            } 180 C${width * 0.3} 140 0 200 0 200 V0 Z`}
+            fill="url(#grad)"
+          />
+        </Svg>
+      </View>
+
+      <View style={styles.headerContent}>
+        <Text style={styles.headerTitle}>{titulo}</Text>
+        <Text style={styles.headerSubtitle}>{subtitulo}</Text>
+      </View>
+    </>
+  );
+
   useEffect(() => {
-  const user = getAuth().currentUser;
+    const user = getAuth().currentUser;
+    if (!user) return;
 
-  if (!user) return;
-
-  const unsubscribe = onSnapshot(
-    collection(db, "registros"),
-    (snapshot) => {
+    const unsubscribe = onSnapshot(collection(db, "registros"), (snapshot) => {
       const mapa = new Map();
 
       snapshot.docs.forEach((doc) => {
         const data = doc.data();
 
-        // 🔥 FILTRAR POR USUARIO
         if (data.uid !== user.uid) return;
-
         if (!data.pacienteId) return;
 
         if (
@@ -212,26 +244,23 @@ export default function NuevoRegistro() {
       });
 
       setPacientesExistentes(Array.from(mapa.values()));
-    }
-  );
+    });
 
-  return () => unsubscribe();
-}, []);
+    return () => unsubscribe();
+  }, []);
 
   const pacientesFiltrados = pacientesExistentes.filter((p) =>
-    p.nombre?.toLowerCase().includes(busquedaPaciente.toLowerCase()),
+    p.nombre?.toLowerCase().includes(busquedaPaciente.toLowerCase())
   );
 
   const seleccionarPaciente = (p: any) => {
     setPacienteId(p.pacienteId);
-
     setNombre(p.nombre || "");
     setEdad(p.edad?.toString() || "");
     setAltura(p.altura?.toString() || "");
     setPeso(p.peso?.toString() || "");
     setImagen(p.foto || null);
     setUnidadEdad(p.unidadEdad || "años");
-
     setModoSeleccion(false);
   };
 
@@ -244,9 +273,7 @@ export default function NuevoRegistro() {
   const validarFormulario = () => {
     const nuevosErrores: Record<string, string> = {};
 
-    if (!nombre.trim()) {
-      nuevosErrores.nombre = "El nombre es obligatorio.";
-    }
+    if (!nombre.trim()) nuevosErrores.nombre = "El nombre es obligatorio.";
 
     const edadNum = Number(edad);
     if (!edad.trim()) {
@@ -294,114 +321,80 @@ export default function NuevoRegistro() {
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  const subirImagen = async () => {
-    if (!imagen) return null;
+  const guardarRegistro = async () => {
+    const user = getAuth().currentUser;
 
-    const data = new FormData();
+    if (!user) {
+      Alert.alert("Error", "No hay usuario autenticado");
+      return;
+    }
 
-    data.append("file", {
-      uri: imagen,
-      type: "image/jpeg",
-      name: "paciente.jpg",
-    } as any);
-
-    data.append("upload_preset", "ecosalud");
+    if (!validarFormulario()) {
+      Alert.alert("Error", "Corrige los campos marcados");
+      return;
+    }
 
     try {
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/dyt8hywwc/image/upload",
-        {
-          method: "POST",
-          body: data,
-        },
-      );
+      let urlFoto = imagen || "";
 
-      const json = await res.json();
-      return json.secure_url;
+      if (imagen && !imagen.startsWith("http")) {
+        const data = new FormData();
+
+        data.append("file", {
+          uri: imagen,
+          type: "image/jpeg",
+          name: "foto.jpg",
+        } as any);
+
+        data.append("upload_preset", "ecosalud");
+
+        const res = await fetch(
+          "https://api.cloudinary.com/v1_1/dyt8hywwc/image/upload",
+          {
+            method: "POST",
+            body: data,
+          }
+        );
+
+        const json = await res.json();
+
+        if (json.secure_url) {
+          urlFoto = json.secure_url;
+        }
+      }
+
+      await addDoc(collection(db, "registros"), {
+        nombre: nombre.trim(),
+        edad: Number(edad),
+        unidadEdad,
+        altura: Number(altura),
+        peso: Number(peso),
+        temperatura: Number(temperatura),
+        presion: presion.trim(),
+        sintomas: [
+          ...sintomasSeleccionados,
+          ...(otrosSintomas.trim() ? [otrosSintomas.trim()] : []),
+        ],
+        diagnostico: diagnostico.trim(),
+        recomendaciones: recomendaciones.trim(),
+        foto: urlFoto,
+        pacienteId: pacienteId || new Date().getTime().toString(),
+        uid: user.uid,
+        createdAt: serverTimestamp(),
+      });
+
+      Alert.alert("Éxito", "Registro guardado correctamente");
+      router.back();
     } catch (error) {
-      console.log("Error Cloudinary:", error);
-      return null;
+      console.error("ERROR COMPLETO:", error);
+      Alert.alert("Error", "No se pudo guardar el registro");
     }
   };
-
-const guardarRegistro = async () => {
-  const user = getAuth().currentUser;
-
-  if (!user) {
-    Alert.alert("Error", "No hay usuario autenticado");
-    return;
-  }
-
-  // 🔥 VALIDAR TODO EL FORMULARIO
-  if (!validarFormulario()) {
-  Alert.alert("Error", "Corrige los campos marcados");
-  return;
-  }
-
-  try {
-    let urlFoto = "";
-
-    // 🔥 SI HAY IMAGEN → subirla primero
-    if (imagen) {
-      const data = new FormData();
-
-      data.append("file", {
-        uri: imagen,
-        type: "image/jpeg",
-        name: "foto.jpg",
-      } as any);
-
-      data.append("upload_preset", "ecosalud");
-
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/dyt8hywwc/image/upload",
-        {
-          method: "POST",
-          body: data,
-        }
-      );
-
-      const json = await res.json();
-      console.log("Cloudinary:", json);
-
-      urlFoto = json.secure_url; // 🔥 AQUÍ
-    }
-
-    // 🔥 AHORA sí guardas en Firestore
-    await addDoc(collection(db, "registros"), {
-      nombre,
-      edad: Number(edad),
-      unidadEdad,
-      altura: Number(altura),
-      peso: Number(peso),
-      temperatura: Number(temperatura),
-      presion,
-      sintomas: [
-        ...sintomasSeleccionados,
-        ...(otrosSintomas ? [otrosSintomas] : []),
-      ],
-      diagnostico,
-      recomendaciones,
-      foto: urlFoto,
-      pacienteId: pacienteId || new Date().getTime().toString(),
-      uid: user.uid,
-      createdAt: serverTimestamp(),
-    });
-
-    Alert.alert("Éxito", "Registro guardado correctamente");
-    router.back();
-
-  } catch (error) {
-    console.error("ERROR COMPLETO:", error);
-    Alert.alert("Error", "No se pudo guardar el registro");
-  }
-};
-
 
   const toggleSintoma = (sintoma: string) => {
     if (sintomasSeleccionados.includes(sintoma)) {
       setSintomasSeleccionados(
-        sintomasSeleccionados.filter((s) => s !== sintoma),
+        sintomasSeleccionados.filter((s) => s !== sintoma)
       );
     } else {
       setSintomasSeleccionados([...sintomasSeleccionados, sintoma]);
@@ -432,6 +425,7 @@ const guardarRegistro = async () => {
     setImagen(null);
     setNombre("");
     setEdad("");
+    setUnidadEdad("años");
     setAltura("");
     setPeso("");
     setTemperatura("");
@@ -445,262 +439,282 @@ const guardarRegistro = async () => {
 
   if (modoSeleccion) {
     return (
-      <View style={styles.container}>
-        <View style={styles.headerConsulta}>
-          <Text style={styles.textConsulta}>¿Para quién es la consulta?</Text>
-        </View>
+      <View style={styles.mainContainer}>
+        <HeaderOla
+          titulo="Nueva Consulta"
+          subtitulo="Selecciona o crea un paciente"
+        />
 
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#6b7280" />
-          <TextInput
-            placeholder="Buscar paciente..."
-            value={busquedaPaciente}
-            onChangeText={setBusquedaPaciente}
-            style={styles.searchInput}
-          />
-        </View>
+        <View style={styles.content}>
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={24} color="#6b7280" />
+            <TextInput
+              placeholder="Buscar paciente..."
+              placeholderTextColor="#6b7280"
+              value={busquedaPaciente}
+              onChangeText={setBusquedaPaciente}
+              style={styles.searchInput}
+            />
+          </View>
 
-        <ScrollView>
-          {pacientesFiltrados.map((p) => (
-            <TouchableOpacity
-              key={p.id}
-              style={styles.cardPaciente}
-              onPress={() => seleccionarPaciente(p)}
-            >
-              <View style={styles.row}>
-                <View style={styles.avatar}>
-                  {p.foto ? (
-                    <Image source={{ uri: p.foto }} style={styles.avatarImg} />
-                  ) : (
-                    <Ionicons name="person" size={20} color="#fff" />
-                  )}
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {pacientesFiltrados.map((p) => (
+              <TouchableOpacity
+                key={p.id}
+                style={styles.cardPaciente}
+                onPress={() => seleccionarPaciente(p)}
+              >
+                <View style={styles.patientRow}>
+                  <View style={styles.avatar}>
+                    {p.foto ? (
+                      <Image source={{ uri: p.foto }} style={styles.avatarImg} />
+                    ) : (
+                      <Ionicons name="person" size={28} color="#fff" />
+                    )}
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.nombre}>{p.nombre}</Text>
+                    <Text style={styles.edadTexto}>
+                      {p.edad} {p.unidadEdad || "años"}
+                    </Text>
+                  </View>
+
+                  <Ionicons name="chevron-forward" size={22} color="#9ca3af" />
                 </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.nombre}>{p.nombre}</Text>
-                  <Text>
-                    {p.edad} {p.unidadEdad || "años"}
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={crearNuevoPaciente}
-        >
-          <Text style={styles.saveText}>Nuevo Paciente</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.saveButton} onPress={crearNuevoPaciente}>
+            <Text style={styles.saveText}>Nuevo Paciente</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.mainContainer}>
+      <HeaderOla
+        titulo={pacienteId ? "Nueva Consulta" : "Nuevo Registro"}
+        subtitulo="Completa los datos del paciente"
+      />
+
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => setModoSeleccion(true)}>
-            <Text style={styles.back}>Atrás</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>
-            {pacienteId ? "Nueva Consulta" : "Nuevo Registro"}
-          </Text>
-          <View style={{ width: 50 }} />
-        </View>
-
-        <View style={styles.photoSection}>
-          <View style={styles.photoWrapper}>
-            <View style={styles.photoCircle}>
-              {imagen ? (
-                <Image source={{ uri: imagen }} style={styles.photo} />
-              ) : (
-                <Ionicons name="image-outline" size={50} color="#d0d0d0" />
-              )}
-            </View>
-            <TouchableOpacity
-              style={styles.cameraButton}
-              onPress={seleccionarImagen}
-            >
-              <Ionicons name="camera" size={22} color="white" />
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => setModoSeleccion(true)}>
+              <Text style={styles.back}>Atrás</Text>
             </TouchableOpacity>
-          </View>
-          <Text style={styles.photoLabel}>Foto del Paciente</Text>
-        </View>
-        
-        <View style={styles.cardSection}>
-        <Text style={styles.section}>DATOS DEL PACIENTE</Text>
-        
-        <View style={styles.subCard}>
-        <View style={styles.row}>
-          <View style={styles.fieldWrapper}>
-            <TextInput
-              placeholder="Nombre completo"
-              placeholderTextColor="#000"
-              style={[styles.inputHalf, errores.nombre && styles.inputError]}
-              value={nombre}
-              onChangeText={setNombre}
-            />
-            {errores.nombre && (
-              <Text style={styles.errorText}>{errores.nombre}</Text>
-            )}
+
+            <Text style={styles.title}>{pacienteId ? "Consulta" : "Registro"}</Text>
+
+            <View style={{ width: 50 }} />
           </View>
 
-          <View style={styles.fieldWrapper}>
-            <View style={{ position: "relative" }}>
-              <TextInput
-                placeholder="Edad"
-                placeholderTextColor="#000"
-                style={[
-                  styles.inputHalf,
-                  { paddingRight: 70 },
-                  errores.edad && styles.inputError,
-                ]}
-                value={edad}
-                onChangeText={setEdad}
-                keyboardType="numeric"
-              />
+          <View style={styles.photoSection}>
+            <View style={styles.photoWrapper}>
+              <View style={styles.photoCircle}>
+                {imagen ? (
+                  <Image source={{ uri: imagen }} style={styles.photo} />
+                ) : (
+                  <Ionicons name="image-outline" size={50} color="#d0d0d0" />
+                )}
+              </View>
 
               <TouchableOpacity
-                style={styles.unitSelector}
-                onPress={() =>
-                  setUnidadEdad(unidadEdad === "años" ? "meses" : "años")
-                }
+                style={styles.cameraButton}
+                onPress={seleccionarImagen}
               >
-                <Text style={styles.unitText}>{unidadEdad}</Text>
+                <Ionicons name="camera" size={22} color="white" />
               </TouchableOpacity>
             </View>
-            {errores.edad && (
-              <Text style={styles.errorText}>{errores.edad}</Text>
-            )}
-            </View>
-          </View>
-        </View>
-      </View>
 
-        <View style={styles.row}>
-          <View style={styles.fieldWrapper}>
-            <View style={{ position: "relative" }}>
-              <TextInput
-                placeholder="Altura"
-                placeholderTextColor="#000"
-                style={[
-                  styles.inputHalf,
-                  { paddingRight: 40 },
-                  errores.altura && styles.inputError,
-                ]}
-                value={altura}
-                onChangeText={setAltura}
-                keyboardType="numeric"
-              />
-              <Text style={styles.unit}>cm</Text>
-            </View>
-            {errores.altura && (
-              <Text style={styles.errorText}>{errores.altura}</Text>
-            )}
+            <Text style={styles.photoLabel}>Foto del Paciente</Text>
           </View>
 
-          <View style={styles.fieldWrapper}>
-            <TextInput
-              placeholder="Peso"
-              placeholderTextColor="#000"
-              style={[styles.inputHalf, errores.peso && styles.inputError]}
-              value={peso}
-              onChangeText={setPeso}
-              keyboardType="numeric"
-            />
-            <Text style={styles.unit}>kg</Text>
-            {errores.peso && (
-              <Text style={styles.errorText}>{errores.peso}</Text>
-            )}
-          </View>
-        </View>
+          <View style={styles.cardSection}>
+            <Text style={styles.section}>DATOS DEL PACIENTE</Text>
 
-        <View style={styles.row}>
-          <View style={styles.fieldWrapper}>
-            <TextInput
-              placeholder="Temp"
-              placeholderTextColor="#000"
-              style={[
-                styles.inputHalf,
-                errores.temperatura && styles.inputError,
-              ]}
-              value={temperatura}
-              onChangeText={setTemperatura}
-              keyboardType="numeric"
-            />
-            <Text style={styles.unit}>°C</Text>
-            {errores.temperatura && (
-              <Text style={styles.errorText}>{errores.temperatura}</Text>
-            )}
-          </View>
-
-          <View style={styles.fieldWrapper}>
-            <TextInput
-              placeholder="P. Arterial"
-              placeholderTextColor="#000"
-              style={[styles.inputHalf, errores.presion && styles.inputError]}
-              value={presion}
-              onChangeText={setPresion}
-            />
-            <Text style={styles.unit}>mmHg</Text>
-            {errores.presion && (
-              <Text style={styles.errorText}>{errores.presion}</Text>
-            )}
-          </View>
-        </View>
-
-        <View style={styles.cardSection}>
-        <Text style={styles.section}>SÍNTOMAS</Text>
-
-        {Object.entries(sintomasData).map(([categoria, lista]) => (
-          <View key={categoria}>
-            <Text style={{ fontWeight: "600", marginBottom: 5 }}>
-              {categoria}
-            </Text>
-
-            {lista.map((sintoma) => (
-              <TouchableOpacity
-                key={sintoma}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-                onPress={() => toggleSintoma(sintoma)}
-              >
-                <Ionicons
-                  name={
-                    sintomasSeleccionados.includes(sintoma)
-                      ? "checkbox"
-                      : "square-outline"
-                  }
-                  size={22}
-                  color="#1E88E5"
+            <View style={styles.row}>
+              <View style={styles.fieldWrapper}>
+                <TextInput
+                  placeholder="Nombre completo"
+                  placeholderTextColor="#6b7280"
+                  style={[styles.inputHalf, errores.nombre && styles.inputError]}
+                  value={nombre}
+                  onChangeText={setNombre}
                 />
-                <Text style={{ marginLeft: 8 }}>{sintoma}</Text>
-              </TouchableOpacity>
-            ))}
+                {errores.nombre && (
+                  <Text style={styles.errorText}>{errores.nombre}</Text>
+                )}
+              </View>
+
+              <View style={styles.fieldWrapper}>
+                <View style={{ position: "relative" }}>
+                  <TextInput
+                    placeholder="Edad"
+                    placeholderTextColor="#6b7280"
+                    style={[
+                      styles.inputHalf,
+                      { paddingRight: 75 },
+                      errores.edad && styles.inputError,
+                    ]}
+                    value={edad}
+                    onChangeText={setEdad}
+                    keyboardType="numeric"
+                  />
+
+                  <TouchableOpacity
+                    style={styles.unitSelector}
+                    onPress={() =>
+                      setUnidadEdad(unidadEdad === "años" ? "meses" : "años")
+                    }
+                  >
+                    <Text style={styles.unitText}>{unidadEdad}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {errores.edad && (
+                  <Text style={styles.errorText}>{errores.edad}</Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={styles.fieldWrapper}>
+                <View style={{ position: "relative" }}>
+                  <TextInput
+                    placeholder="Altura"
+                    placeholderTextColor="#6b7280"
+                    style={[
+                      styles.inputHalf,
+                      { paddingRight: 45 },
+                      errores.altura && styles.inputError,
+                    ]}
+                    value={altura}
+                    onChangeText={setAltura}
+                    keyboardType="numeric"
+                  />
+                  <Text style={styles.unit}>cm</Text>
+                </View>
+
+                {errores.altura && (
+                  <Text style={styles.errorText}>{errores.altura}</Text>
+                )}
+              </View>
+
+              <View style={styles.fieldWrapper}>
+                <View style={{ position: "relative" }}>
+                  <TextInput
+                    placeholder="Peso"
+                    placeholderTextColor="#6b7280"
+                    style={[
+                      styles.inputHalf,
+                      { paddingRight: 40 },
+                      errores.peso && styles.inputError,
+                    ]}
+                    value={peso}
+                    onChangeText={setPeso}
+                    keyboardType="numeric"
+                  />
+                  <Text style={styles.unit}>kg</Text>
+                </View>
+
+                {errores.peso && (
+                  <Text style={styles.errorText}>{errores.peso}</Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={styles.fieldWrapper}>
+                <View style={{ position: "relative" }}>
+                  <TextInput
+                    placeholder="Temp"
+                    placeholderTextColor="#6b7280"
+                    style={[
+                      styles.inputHalf,
+                      { paddingRight: 40 },
+                      errores.temperatura && styles.inputError,
+                    ]}
+                    value={temperatura}
+                    onChangeText={setTemperatura}
+                    keyboardType="numeric"
+                  />
+                  <Text style={styles.unit}>°C</Text>
+                </View>
+
+                {errores.temperatura && (
+                  <Text style={styles.errorText}>{errores.temperatura}</Text>
+                )}
+              </View>
+
+              <View style={styles.fieldWrapper}>
+                <View style={{ position: "relative" }}>
+                  <TextInput
+                    placeholder="P. Arterial"
+                    placeholderTextColor="#6b7280"
+                    style={[
+                      styles.inputHalf,
+                      { paddingRight: 55 },
+                      errores.presion && styles.inputError,
+                    ]}
+                    value={presion}
+                    onChangeText={setPresion}
+                  />
+                  <Text style={styles.unit}>mmHg</Text>
+                </View>
+
+                {errores.presion && (
+                  <Text style={styles.errorText}>{errores.presion}</Text>
+                )}
+              </View>
+            </View>
           </View>
-        ))}
 
-      <View style={styles.subCard}>
-        <TextInput
-          placeholder="Otros síntomas..."
-          placeholderTextColor="#6b7280"
-          style={styles.textArea}
-          multiline
-          value={otrosSintomas}
-          onChangeText={setOtrosSintomas}
-        />
-        </View>
-      </View>
+          <View style={styles.cardSection}>
+            <Text style={styles.section}>SÍNTOMAS</Text>
 
-        <View style={styles.cardSection}>
-        <Text style={styles.section}>DIAGNÓSTICO</Text>
+            {Object.entries(sintomasData).map(([categoria, lista]) => (
+              <View key={categoria} style={styles.symptomGroup}>
+                <Text style={styles.categoryTitle}>{categoria}</Text>
 
-          <View style={styles.subCard}>
+                {lista.map((sintoma) => (
+                  <TouchableOpacity
+                    key={sintoma}
+                    style={styles.symptomItem}
+                    onPress={() => toggleSintoma(sintoma)}
+                  >
+                    <Ionicons
+                      name={
+                        sintomasSeleccionados.includes(sintoma)
+                          ? "checkbox"
+                          : "square-outline"
+                      }
+                      size={22}
+                      color="#1E88E5"
+                    />
+                    <Text style={styles.symptomText}>{sintoma}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
+
+            <TextInput
+              placeholder="Otros síntomas..."
+              placeholderTextColor="#6b7280"
+              style={styles.textArea}
+              multiline
+              value={otrosSintomas}
+              onChangeText={setOtrosSintomas}
+            />
+          </View>
+
+          <View style={styles.cardSection}>
+            <Text style={styles.section}>DIAGNÓSTICO</Text>
+
             <TextInput
               placeholder="Diagnóstico clínico..."
               placeholderTextColor="#6b7280"
@@ -709,215 +723,130 @@ const guardarRegistro = async () => {
               value={diagnostico}
               onChangeText={setDiagnostico}
             />
-          
-          <Text style={[styles.subTitle, { marginTop: 10 }]}>
-            Recomendaciones
-          </Text>
 
-          <TextInput
-            placeholder="Indicaciones médicas..."
-            placeholderTextColor="#6b7280"
-            style={styles.textArea}
-            multiline
-            value={recomendaciones}
-            onChangeText={setRecomendaciones}
-          />
-            </View>
+            <Text style={styles.subTitle}>Recomendaciones</Text>
+
+            <TextInput
+              placeholder="Indicaciones médicas..."
+              placeholderTextColor="#6b7280"
+              style={styles.textArea}
+              multiline
+              value={recomendaciones}
+              onChangeText={setRecomendaciones}
+            />
           </View>
 
-        <TouchableOpacity style={styles.saveButton} onPress={guardarRegistro}>
-          <Text style={styles.saveText}>Guardar</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.saveButton} onPress={guardarRegistro}>
+            <Text style={styles.saveText}>Guardar</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     backgroundColor: "#f5f6fa",
-    paddingHorizontal: 20,
-    paddingTop: 50,
   },
+
+  containerSvg: {
+    position: "absolute",
+    top: 0,
+    width: "100%",
+  },
+
+  headerContent: {
+    marginTop: 100,
+    alignItems: "center",
+    marginBottom: 15,
+  },
+
+  headerTitle: {
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "bold",
+  },
+
+  headerSubtitle: {
+    color: "#e0f2fe",
+    fontSize: 14,
+    marginTop: 4,
+  },
+
+  content: {
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
+
   back: {
     color: "#1E88E5",
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 15,
   },
+
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
+    color: "#111827",
   },
-  photoSection: {
-    alignItems: "center",
-    marginVertical: 20,
-  },
-  photoWrapper: {
-    position: "relative",
-    width: 120,
-    height: 120,
-  },
-  photoCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#e9ecef",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  photo: {
-    width: "100%",
-    height: "100%",
-  },
-  cameraButton: {
-    position: "absolute",
-    bottom: 0,
-    right: -10,
-    backgroundColor: "#007BFF",
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 3,
-    borderColor: "#f5f6fa",
-  },
-  photoLabel: {
-    marginTop: 10,
-    fontSize: 14,
-    color: "#6c757d",
-  },
-  section: {
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#333",
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  fieldWrapper: {
-    width: "48%",
-    marginBottom: 10,
-  },
-  inputHalf: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 6,
-  },
-  inputError: {
-    borderWidth: 1.5,
-    borderColor: "#ef4444",
-  },
-  errorText: {
-    color: "#ef4444",
-    fontSize: 12,
-    marginBottom: 10,
-    marginLeft: 4,
-  },
-  textArea: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 10,
-    height: 100,
-    marginBottom: 15,
-    textAlignVertical: "top",
-  },
-  saveButton: {
-    backgroundColor: "#1E88E5",
-    padding: 18,
-    borderRadius: 12,
-    alignItems: "center",
-    marginTop: 10,
-    marginBottom: 30,
-  },
-  saveText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
+
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginBottom: 12,
+    paddingHorizontal: 18,
+    borderRadius: 18,
+    marginBottom: 16,
+    height: 58,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
   },
 
   searchInput: {
-    marginLeft: 8,
+    marginLeft: 10,
     flex: 1,
-    paddingVertical: 10,
+    fontSize: 16,
+    color: "#111827",
   },
 
   cardPaciente: {
     backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+    padding: 14,
+    borderRadius: 18,
+    marginBottom: 14,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
   },
 
-  headerConsulta: {
-    backgroundColor: "#1E88E5",
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 15,
-  },
-
-  textConsulta: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-
-  unit: {
-    position: "absolute",
-    right: 12,
-    top: 18,
-    color: "#6b7280",
-    fontSize: 13,
-  },
-
-  unitSelector: {
-    position: "absolute",
-    right: 8,
-    top: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: "#e5e7eb",
-    borderRadius: 6,
-  },
-
-  unitText: {
-    fontSize: 12,
-    color: "#374151",
-    fontWeight: "600",
-  },
-
-  rowItem: {
+  patientRow: {
     flexDirection: "row",
     alignItems: "center",
   },
 
   avatar: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    backgroundColor: "#9ca3af",
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "#1E88E5",
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
-    marginRight: 10,
+    marginRight: 14,
   },
 
   avatarImg: {
@@ -927,32 +856,198 @@ const styles = StyleSheet.create({
 
   nombre: {
     fontWeight: "bold",
+    fontSize: 18,
+    color: "#111827",
+  },
+
+  edadTexto: {
+    color: "#6b7280",
     fontSize: 15,
+    marginTop: 3,
+  },
+
+  photoSection: {
+    alignItems: "center",
+    marginVertical: 22,
+  },
+
+  photoWrapper: {
+    position: "relative",
+    width: 125,
+    height: 125,
+  },
+
+  photoCircle: {
+    width: 125,
+    height: 125,
+    borderRadius: 62.5,
+    backgroundColor: "#e5e7eb",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    borderWidth: 4,
+    borderColor: "#fff",
+    elevation: 4,
+  },
+
+  photo: {
+    width: "100%",
+    height: "100%",
+  },
+
+  cameraButton: {
+    position: "absolute",
+    bottom: 2,
+    right: -6,
+    backgroundColor: "#1E88E5",
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#f5f6fa",
+  },
+
+  photoLabel: {
+    marginTop: 10,
+    fontSize: 14,
+    color: "#6b7280",
   },
 
   cardSection: {
-  backgroundColor: "#fff",
-  borderRadius: 12,
-  padding: 15,
-  marginBottom: 15,
-  elevation: 3, // Android
-  shadowColor: "#000", // iOS
-  shadowOpacity: 0.1,
-  shadowRadius: 5,
-  shadowOffset: { width: 0, height: 2 },
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    padding: 16,
+    marginBottom: 18,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
   },
-  subCard: {
-  backgroundColor: "#f9fafb",
-  borderRadius: 10,
-  padding: 12,
-  marginBottom: 10,
-  borderWidth: 1,
-  borderColor: "#e5e7eb",
+
+  section: {
+    fontWeight: "bold",
+    fontSize: 15,
+    marginBottom: 12,
+    color: "#111827",
+    letterSpacing: 0.5,
   },
+
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+
+  fieldWrapper: {
+    width: "48%",
+    marginBottom: 10,
+  },
+
+  inputHalf: {
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 14,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+
+  inputError: {
+    borderWidth: 1.5,
+    borderColor: "#ef4444",
+  },
+
+  errorText: {
+    color: "#ef4444",
+    fontSize: 12,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+
+  unit: {
+    position: "absolute",
+    right: 12,
+    top: 18,
+    color: "#6b7280",
+    fontSize: 12,
+  },
+
+  unitSelector: {
+    position: "absolute",
+    right: 8,
+    top: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    backgroundColor: "#e0f2fe",
+    borderRadius: 8,
+  },
+
+  unitText: {
+    fontSize: 12,
+    color: "#1E5FA8",
+    fontWeight: "700",
+  },
+
+  symptomGroup: {
+    marginBottom: 12,
+  },
+
+  categoryTitle: {
+    fontWeight: "700",
+    marginBottom: 8,
+    color: "#374151",
+    fontSize: 14,
+  },
+
+  symptomItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    backgroundColor: "#f9fafb",
+    padding: 9,
+    borderRadius: 12,
+  },
+
+  symptomText: {
+    marginLeft: 8,
+    color: "#374151",
+    fontSize: 14,
+  },
+
+  textArea: {
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 14,
+    height: 100,
+    marginBottom: 15,
+    textAlignVertical: "top",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+
   subTitle: {
-  fontSize: 13,
-  fontWeight: "600",
-  color: "#374151",
-  marginBottom: 6,
-},
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#374151",
+    marginBottom: 6,
+  },
+
+  saveButton: {
+    backgroundColor: "#1E88E5",
+    padding: 18,
+    borderRadius: 18,
+    alignItems: "center",
+    marginTop: 18,
+    marginBottom: 30,
+    elevation: 4,
+  },
+
+  saveText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });
