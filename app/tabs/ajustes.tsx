@@ -1,169 +1,294 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import { signOut } from "firebase/auth";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  SafeAreaView,
+  Dimensions,
+  ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
-import { auth } from "../../firebase";
+import Svg, {
+  Defs,
+  Path,
+  Stop,
+  LinearGradient as SvgLinearGradient,
+} from "react-native-svg";
 
-export default function Ajustes() {
+import { getAuth } from "firebase/auth";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { db } from "../../firebase";
+
+const { width } = Dimensions.get("window");
+
+export default function Notificaciones() {
   const router = useRouter();
-  const user = auth.currentUser;
 
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState(true);
+  const [notificaciones, setNotificaciones] = useState<any[]>([]);
+  const [alertaActiva, setAlertaActiva] = useState(false);
 
-  // Cargar modo guardado
   useEffect(() => {
-    const loadSettings = async () => {
-      const savedDarkMode = await AsyncStorage.getItem("darkMode");
-      if (savedDarkMode !== null) {
-        setDarkMode(JSON.parse(savedDarkMode));
-      }
-    };
-    loadSettings();
+    const user = getAuth().currentUser;
+  if (!user) return;
+
+  const q = query(
+    collection(db, "citas"),
+    where("uid", "==", user.uid),
+    where("estado", "==", "pendiente")
+  );
+
+  const unsubscribe = onSnapshot(q, async (snapshot) => {
+  const ahora = new Date();
+
+  const data: any[] = [];
+  let hayAlerta = false; // 👈 PASO 2
+
+  snapshot.docs.forEach((docSnap) => {
+    const cita = docSnap.data();
+
+    const fechaCita = new Date(cita.fechaCita);
+    const diffMs = fechaCita.getTime() - ahora.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+
+    // 🔴 ACTIVA PUNTO ROJO
+    if (diffMin <= 240 && diffMin > 0) {
+      hayAlerta = true;
+    }
+    
+    if (diffMin <= 120 && diffMin > 0) {
+      hayAlerta = true;
+    }
+
+    if (diffMin <= 40 && diffMin > 0) {
+      hayAlerta = true;
+    }
+
+    if (diffMin <= 5 && diffMin > 0) {
+      hayAlerta = true;
+    }
+
+    // ⏰ RECORDATORIO EN LISTA
+    if (diffMin <= 240 && diffMin > 0 && !cita.recordatorioMostrado) {
+
+      const horas = Math.floor(diffMin / 60);
+      const minutos = diffMin % 60;
+
+      let tiempoTexto =
+        horas > 0
+          ? `${horas} hora(s) y ${minutos} min`
+          : `${minutos} min`;
+
+      data.push({
+        id: docSnap.id,
+        titulo: "⏰ Recordatorio de cita",
+        mensaje: `Faltan ${tiempoTexto} para la cita con ${cita.nombrePaciente}`,
+        fecha: cita.fecha,
+        leido: false,
+        tipo: "cita",
+      });
+    }
+  });
+
+  setNotificaciones(data);
+  });
+
+  return () => unsubscribe();
   }, []);
 
-  // Guardar modo oscuro
-  const toggleDarkMode = async (value: boolean) => {
-    setDarkMode(value);
-    await AsyncStorage.setItem("darkMode", JSON.stringify(value));
+  const marcarComoLeido = (id: string) => {
+    setNotificaciones((prev) =>
+      prev.map((n) =>
+        n.id === id ? { ...n, leido: true } : n
+      )
+    );
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.replace("/");
-    } catch (error) {
-      Alert.alert("Error", "No se pudo cerrar sesión");
-    }
+  const getIcon = (tipo: string) => {
+    if (tipo === "cita") return "calendar-outline";
+    if (tipo === "seguimiento") return "time-outline";
+    return "alert-circle-outline";
   };
 
-  // 🎨 COLORES DINÁMICOS
-  const theme = {
-    background: darkMode ? "#121212" : "#f5f7fb",
-    card: darkMode ? "#1e1e1e" : "#fff",
-    text: darkMode ? "#fff" : "#000",
-    subtext: darkMode ? "#aaa" : "#6c757d",
+  const getColor = (tipo: string) => {
+    if (tipo === "cita") return "#1E88E5";
+    if (tipo === "seguimiento") return "#f59e0b";
+    return "#ef4444";
   };
+
+  const HeaderOla = () => (
+    <>
+      <View style={styles.containerSvg}>
+        <Svg width={width} height={220}>
+          <Defs>
+            <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+              <Stop offset="0" stopColor="#1E5FA8" />
+              <Stop offset="1" stopColor="#2FA4D6" />
+            </SvgLinearGradient>
+          </Defs>
+
+          <Path
+            d={`M0 0 H${width} V150 C${width} 150 ${width * 0.7} 220 ${
+              width * 0.5
+            } 180 C${width * 0.3} 140 0 200 0 200 V0 Z`}
+            fill="url(#grad)"
+          />
+        </Svg>
+      </View>
+
+      <View style={styles.headerContent}>
+        <Text style={styles.headerTitle}>Recordatorio</Text>
+        <Text style={styles.headerSubtitle}>
+          Centro de alertas y actividad
+        </Text>
+      </View>
+    </>
+  );
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
-    >
-      <Text style={[styles.title, { color: theme.text }]}>Ajustes</Text>
+    <View style={styles.mainContainer}>
+      <HeaderOla />
 
-      {/* PERFIL */}
-      <View style={[styles.card, { backgroundColor: theme.card }]}>
-        <Text style={[styles.label, { color: theme.subtext }]}>Correo</Text>
-        <Text style={[styles.value, { color: theme.text }]}>
-          {user?.email || "No disponible"}
-        </Text>
-      </View>
+      <ScrollView>
+        <View style={styles.content}>
 
-      {/* OPCIONES */}
-      <View style={[styles.card, { backgroundColor: theme.card }]}>
-        <View style={styles.option}>
-          <View style={styles.row}>
-            <Ionicons name="moon-outline" size={20} color={theme.text} />
-            <Text style={[styles.optionText, { color: theme.text }]}>
-              Modo oscuro
-            </Text>
+          <View style={styles.topRow}>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Text style={styles.back}>Atrás</Text>
+            </TouchableOpacity>
           </View>
-          <Switch value={darkMode} onValueChange={toggleDarkMode} />
+
+          {notificaciones.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.cardSection,
+                !item.leido && styles.noLeido,
+              ]}
+              onPress={() => marcarComoLeido(item.id)}
+            >
+              <View style={styles.optionRow}>
+
+                <View style={styles.optionLeft}>
+                  <Ionicons
+                    name={getIcon(item.tipo)}
+                    size={22}
+                    color={getColor(item.tipo)}
+                  />
+
+                  <View style={{ marginLeft: 10 }}>
+                    <Text style={styles.title}>
+                      {item.titulo}
+                    </Text>
+                    <Text style={styles.message}>
+                      {item.mensaje}
+                    </Text>
+                    <Text style={styles.date}>
+                      {item.fecha}
+                    </Text>
+                  </View>
+                </View>
+
+                {!item.leido && (
+                  <View style={styles.dot} />
+                )}
+              </View>
+            </TouchableOpacity>
+          ))}
+
         </View>
-
-        <View style={styles.option}>
-          <View style={styles.row}>
-            <Ionicons
-              name="notifications-outline"
-              size={20}
-              color={theme.text}
-            />
-            <Text style={[styles.optionText, { color: theme.text }]}>
-              Notificaciones
-            </Text>
-          </View>
-          <Switch value={notifications} onValueChange={setNotifications} />
-        </View>
-      </View>
-
-      {/* INFO APP */}
-      <View style={[styles.card, { backgroundColor: theme.card }]}>
-        <Text style={[styles.label, { color: theme.subtext }]}>Versión</Text>
-        <Text style={[styles.value, { color: theme.text }]}>
-          {Constants.expoConfig?.version || "1.0.0"}
-        </Text>
-      </View>
-
-      {/* LOGOUT */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={22} color="#fff" />
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+      </ScrollView>
+    </View>
   );
 }
 
+/* ESTILOS (IGUAL QUE EL TUYO) */
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
+  mainContainer: { flex: 1, backgroundColor: "#f5f6fa" },
+
+  containerSvg: {
+    position: "absolute",
+    top: 0,
+    width: "100%",
   },
-  title: {
+
+  headerContent: {
+    marginTop: 100,
+    alignItems: "center",
+    marginBottom: 15,
+  },
+
+  headerTitle: {
+    color: "#fff",
     fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 20,
   },
-  card: {
-    borderRadius: 15,
-    padding: 15,
+
+  headerSubtitle: {
+    color: "#e0f2fe",
+    fontSize: 14,
+  },
+
+  content: {
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+
+  topRow: {
+    marginTop: 35,
     marginBottom: 15,
+  },
+
+  back: {
+    color: "#1E88E5",
+    fontWeight: "700",
+  },
+
+  cardSection: {
+    borderRadius: 22,
+    padding: 16,
+    marginBottom: 12,
+    backgroundColor: "#fff",
     elevation: 3,
   },
-  label: {
-    fontSize: 13,
+
+  noLeido: {
+    borderLeftWidth: 5,
+    borderLeftColor: "#1E88E5",
   },
-  value: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginTop: 5,
-  },
-  option: {
+
+  optionRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
   },
-  optionText: {
-    marginLeft: 10,
+
+  optionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+
+  title: {
+    fontWeight: "bold",
     fontSize: 15,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
+
+  message: {
+    color: "#555",
+    marginTop: 2,
   },
-  logoutButton: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#d9534f",
-    padding: 15,
-    borderRadius: 15,
-    marginTop: 20,
+
+  date: {
+    fontSize: 12,
+    color: "#999",
+    marginTop: 4,
   },
-  logoutText: {
-    color: "#fff",
-    fontWeight: "bold",
-    marginLeft: 10,
+
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#1E88E5",
   },
 });
