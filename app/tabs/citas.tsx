@@ -180,7 +180,7 @@ export default function Citas() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.nombre}>{item.nombrePaciente}</Text>
                 <Text style={styles.fecha}>
-                  {item.fecha} - {item.hora}
+                  {item.fecha} - {item.motivo} - {item.hora}
                 </Text>
               </View>
 
