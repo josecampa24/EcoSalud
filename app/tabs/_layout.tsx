@@ -55,12 +55,12 @@ export default function TabsLayout() {
         }}
       />
 
-      <Tabs.Screen
+        <Tabs.Screen
         name="ajustes"
         options={{
-          title: "Ajustes",
+          title: "Recordatorio",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
+            <Ionicons name="notifications-outline" size={size} color={color} />
           ),
         }}
       />
