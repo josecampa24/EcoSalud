@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   deleteDoc,
@@ -41,7 +41,6 @@ type Registro = {
   unidadEdad?: "años" | "meses";
   foto?: string;
   createdAt?: any;
-  esDuplicado?: boolean;
   pacienteId?: string;
   esCompartido?: boolean;
   compartidoPor?: string;
@@ -52,11 +51,11 @@ export default function Registros() {
 
   function SvgTop() {
     return (
-      <Svg width={width} height={220} viewBox={`0 0 ${width} 220`}>
+      <Svg width={width} height={220}>
         <Defs>
           <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#1E5FA8" stopOpacity="1" />
-            <Stop offset="1" stopColor="#2FA4D6" stopOpacity="1" />
+            <Stop offset="0" stopColor="#1E5FA8" />
+            <Stop offset="1" stopColor="#2FA4D6" />
           </SvgLinearGradient>
         </Defs>
         <Path
@@ -68,85 +67,86 @@ export default function Registros() {
       </Svg>
     );
   }
+
   const router = useRouter();
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [fechaFiltro, setFechaFiltro] = useState<Date | null>(null);
   const [mostrarPicker, setMostrarPicker] = useState(false);
 
-  // ── Pacientes compartidos ────────────────────────────────────────────
   const [sharedIds, setSharedIds] = useState<{ pacienteId: string; ownerNombre: string }[]>([]);
   const [registrosCompartidos, setRegistrosCompartidos] = useState<Registro[]>([]);
 
-useEffect(() => {
-  const user = getAuth().currentUser;
-
-  if (!user) return;
-
-  const q = query(
-    collection(db, "registros"),
-    where("uid", "==", user.uid)
-  );
-
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const mapa = new Map<string, Registro>();
-
-snapshot.docs.forEach((docSnap) => {
-  const data = docSnap.data() as Registro;
-
-  if (!data.pacienteId) return;
-
-  const key = data.pacienteId;
-
-  const existente = mapa.get(key);
-
-  const fechaActual = data.createdAt?.seconds || 0;
-  const fechaExistente = existente?.createdAt?.seconds || 0;
-
-  if (!existente || fechaActual > fechaExistente) {
-    mapa.set(key, {
-      ...data,
-      id: docSnap.id,
-    });
-  }
-});
-
-const listaFinal = Array.from(mapa.values()).sort(
-  (a, b) =>
-    (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
-);
-
-setRegistros(listaFinal);
-  });
-
-  return () => unsubscribe();
-}, []);
-
-  // 🔗 Listener de pacientes compartidos conmigo
+  // 🔥 REGISTROS PROPIOS
   useEffect(() => {
-    const user = getAuth().currentUser;
-    if (!user) return;
+    const auth = getAuth();
 
-    const q = query(
-      collection(db, "compartidos"),
-      where("sharedWithUid", "==", user.uid)
-    );
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const lista = snapshot.docs.map((d) => {
-        const data = d.data();
-        return {
-          pacienteId: data.pacienteId as string,
-          ownerNombre: data.ownerNombre as string,
-        };
+      const q = query(
+        collection(db, "registros"),
+        where("uid", "==", user.uid)
+      );
+
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const mapa = new Map<string, Registro>();
+
+        snapshot.docs.forEach((docSnap) => {
+          const data = docSnap.data() as Registro;
+          if (!data.pacienteId) return;
+
+          const existente = mapa.get(data.pacienteId);
+          const actual = data.createdAt?.seconds || 0;
+          const anterior = existente?.createdAt?.seconds || 0;
+
+          if (!existente || actual > anterior) {
+            mapa.set(data.pacienteId, {
+              ...data,
+              id: docSnap.id,
+            });
+          }
+        });
+
+        setRegistros(Array.from(mapa.values()));
       });
-      setSharedIds(lista);
+
+      return () => unsubscribe();
     });
 
-    return () => unsubscribe();
+    return unsubscribeAuth;
   }, []);
 
-  // 🔗 Cuando cambian los sharedIds, cargar registros compartidos
+  // 🔗 COMPARTIDOS
+  useEffect(() => {
+    const auth = getAuth();
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+
+      const q = query(
+        collection(db, "compartidos"),
+        where("sharedWithUid", "==", user.uid)
+      );
+
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const lista = snapshot.docs.map((d) => {
+          const data = d.data();
+          return {
+            pacienteId: data.pacienteId as string,
+            ownerNombre: data.ownerNombre as string,
+          };
+        });
+        setSharedIds(lista);
+      });
+
+      return () => unsubscribe();
+    });
+
+    return unsubscribeAuth;
+  }, []);
+
+  // 🔗 REGISTROS COMPARTIDOS
   useEffect(() => {
     if (sharedIds.length === 0) {
       setRegistrosCompartidos([]);
@@ -155,7 +155,6 @@ setRegistros(listaFinal);
 
     const ids = sharedIds.map((s) => s.pacienteId);
 
-    // Firestore "in" soporta máx 30
     const q = query(
       collection(db, "registros"),
       where("pacienteId", "in", ids.slice(0, 30))
@@ -168,14 +167,14 @@ setRegistros(listaFinal);
         const data = docSnap.data() as Registro;
         if (!data.pacienteId) return;
 
-        const key = data.pacienteId;
-        const existente = mapa.get(key);
-        const fechaActual = data.createdAt?.seconds || 0;
-        const fechaExistente = existente?.createdAt?.seconds || 0;
+        const existente = mapa.get(data.pacienteId);
+        const actual = data.createdAt?.seconds || 0;
+        const anterior = existente?.createdAt?.seconds || 0;
 
-        if (!existente || fechaActual > fechaExistente) {
-          const shared = sharedIds.find((s) => s.pacienteId === key);
-          mapa.set(key, {
+        if (!existente || actual > anterior) {
+          const shared = sharedIds.find((s) => s.pacienteId === data.pacienteId);
+
+          mapa.set(data.pacienteId, {
             ...data,
             id: docSnap.id,
             esCompartido: true,
@@ -190,7 +189,6 @@ setRegistros(listaFinal);
     return () => unsubscribe();
   }, [sharedIds]);
 
-  // Combinar propios + compartidos (sin duplicados)
   const todosRegistros = [
     ...registros,
     ...registrosCompartidos.filter(
@@ -198,201 +196,77 @@ setRegistros(listaFinal);
     ),
   ];
 
-  // 🔍 BUSCADOR (nombre + fecha)
   const registrosFiltrados = todosRegistros.filter((p) => {
-  const texto = busqueda.toLowerCase();
+    const texto = busqueda.toLowerCase();
+    const nombre = (p.nombre || "").toLowerCase();
 
-  const nombreMatch = p.nombre.toLowerCase().includes(texto);
+    let fechaMatch = true;
 
-  let fechaMatch = true;
+    if (fechaFiltro && p.createdAt) {
+      const fechaRegistro = new Date(p.createdAt.seconds * 1000);
 
-  if (fechaFiltro && p.createdAt) {
-    const fechaRegistro = new Date(p.createdAt.seconds * 1000);
+      fechaMatch =
+        fechaRegistro.getDate() === fechaFiltro.getDate() &&
+        fechaRegistro.getMonth() === fechaFiltro.getMonth() &&
+        fechaRegistro.getFullYear() === fechaFiltro.getFullYear();
+    }
 
-    fechaMatch =
-      fechaRegistro.getDate() === fechaFiltro.getDate() &&
-      fechaRegistro.getMonth() === fechaFiltro.getMonth() &&
-      fechaRegistro.getFullYear() === fechaFiltro.getFullYear();
-  }
-
-  return (nombreMatch || texto === "") && fechaMatch;
-});
+    return (nombre.includes(texto) || texto === "") && fechaMatch;
+  });
 
   const eliminarPaciente = (item: Registro) => {
     if (item.esCompartido) {
-      Alert.alert(
-        "No permitido",
-        "No puedes eliminar un paciente compartido. Solo el doctor dueño puede hacerlo."
-      );
+      Alert.alert("No permitido", "No puedes eliminar un paciente compartido.");
       return;
     }
 
-    Alert.alert(
-      "Eliminar paciente",
-      "Se eliminarán TODAS las consultas de este paciente. ¿Continuar?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const pacienteId = item.pacienteId || item.id;
+    Alert.alert("Eliminar paciente", "¿Seguro?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        onPress: async () => {
+          const pacienteId = item.pacienteId || item.id;
 
-              const q = query(
-                collection(db, "registros"),
-                where("pacienteId", "==", pacienteId),
-              );
+          const q = query(
+            collection(db, "registros"),
+            where("pacienteId", "==", pacienteId)
+          );
 
-              const snapshot = await getDocs(q);
+          const snapshot = await getDocs(q);
 
-              const eliminaciones = snapshot.docs.map((docItem) =>
-                deleteDoc(doc(db, "registros", docItem.id)),
-              );
-
-              await Promise.all(eliminaciones);
-            } catch (error) {
-              console.error("Error eliminando paciente:", error);
-            }
-          },
+          await Promise.all(
+            snapshot.docs.map((d) =>
+              deleteDoc(doc(db, "registros", d.id))
+            )
+          );
         },
-      ],
-    );
-  };
-
-  const renderRightActions = (item: Registro) => {
-    return (
-      <TouchableOpacity
-        style={styles.deleteSwipe}
-        onPress={() => eliminarPaciente(item)}
-      >
-        <Ionicons name="trash" size={24} color="#fff" />
-      </TouchableOpacity>
-    );
+      },
+    ]);
   };
 
   return (
     <View style={styles.mainContainer}>
-      {/* SVG FONDO */}
       <View style={styles.containerSvg}>
         <SvgTop />
       </View>
 
       <SafeAreaView style={styles.container}>
-        {/* HEADER */}
         <View style={styles.headerContent}>
           <Text style={styles.title}>Lista de Pacientes</Text>
-          <Text style={styles.subtitle}>Registros recientes</Text>
         </View>
 
-              {/* FILTROS */}
-      <View style={{ marginTop: 20 }}>
-
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          
-          <View style={[styles.searchContainer, { flex: 1 }]}>
-            <Ionicons name="search" size={20} color="#6b7280" />
-            <TextInput
-              placeholder="Buscar por nombre..."
-              value={busqueda}
-              onChangeText={setBusqueda}
-              style={styles.searchInput}
-            />
-          </View>
-
-          <TouchableOpacity
-            onPress={() => setMostrarPicker(true)}
-            style={{
-              backgroundColor: "#1E88E5",
-              padding: 12,
-              borderRadius: 10,
-            }}
-          >
-            <Ionicons name="calendar" size={20} color="#fff" />
-          </TouchableOpacity>
-
-        </View>
-
-        {/* TEXTO DE FILTRO */}
-        {fechaFiltro && (
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 5 }}>
-            <Text>
-              Filtrando por: {fechaFiltro.toLocaleDateString()}
-            </Text>
-
-            <TouchableOpacity onPress={() => setFechaFiltro(null)}>
-              <Text style={{ color: "red" }}>Quitar ❌</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-      </View>
-
-      {/* DATE PICKER */}
-      {mostrarPicker && (
-        <DateTimePicker
-          value={fechaFiltro || new Date()}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setMostrarPicker(false);
-            if (selectedDate) {
-              setFechaFiltro(selectedDate);
-            }
-          }}
-        />
-      )}
-
-        {/* LISTA */}
         <FlatList
           data={registrosFiltrados}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 20 }}
           renderItem={({ item }) => (
-            <Swipeable renderRightActions={() => renderRightActions(item)}>
-              <TouchableOpacity
-                style={styles.card}
-                onPress={() => router.push(`/patient-profile?id=${item.pacienteId}`)}
-              >
-                <View style={styles.row}>
-                  <View style={styles.avatar}>
-                    {item.foto ? (
-                      <Image
-                        source={{ uri: item.foto }}
-                        style={styles.avatarImg}
-                      />
-                    ) : (
-                      <Ionicons name="person" size={24} color="#fff" />
-                    )}
-                  </View>
-
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.nombre}>{item.nombre}</Text>
-                    <Text>
-                      Edad: {item.edad}{" "}
-                      {item.unidadEdad === "meses" ? "mes(es)" : "año(s)"}
-                    </Text>
-
-                    {item.esCompartido && (
-                      <View style={styles.sharedBadge}>
-                        <Ionicons name="link" size={12} color="#1E88E5" />
-                        <Text style={styles.sharedBadgeText}>
-                          Compartido por {item.compartidoPor}
-                        </Text>
-                      </View>
-                    )}
-
-                    <Text style={styles.fecha}>
-                      {item.createdAt
-                        ? new Date(
-                            item.createdAt.seconds * 1000,
-                          ).toLocaleDateString()
-                        : "Sin fecha"}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </Swipeable>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() =>
+                router.push(`/patient-profile?id=${item.pacienteId}`)
+              }
+            >
+              <Text style={styles.nombre}>{item.nombre}</Text>
+            </TouchableOpacity>
           )}
         />
       </SafeAreaView>
