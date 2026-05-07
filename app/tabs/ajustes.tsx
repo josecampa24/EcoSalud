@@ -1,13 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { getAuth } from "firebase/auth";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import {
   Dimensions,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import Svg, {
   Defs,
@@ -15,92 +17,64 @@ import Svg, {
   Stop,
   LinearGradient as SvgLinearGradient,
 } from "react-native-svg";
-
-import { getAuth } from "firebase/auth";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../../firebase";
 
 const { width } = Dimensions.get("window");
 
 export default function Notificaciones() {
   const router = useRouter();
-
   const [notificaciones, setNotificaciones] = useState<any[]>([]);
-  const [alertaActiva, setAlertaActiva] = useState(false);
 
   useEffect(() => {
     const user = getAuth().currentUser;
-  if (!user) return;
+    if (!user) return;
 
-  const q = query(
-    collection(db, "citas"),
-    where("uid", "==", user.uid),
-    where("estado", "==", "pendiente")
-  );
+    const q = query(
+      collection(db, "citas"),
+      where("uid", "==", user.uid),
+      where("estado", "==", "pendiente")
+    );
 
-  const unsubscribe = onSnapshot(q, async (snapshot) => {
-  const ahora = new Date();
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const ahora = new Date();
+      const data: any[] = [];
 
-  const data: any[] = [];
-  let hayAlerta = false; // 👈 PASO 2
+      snapshot.docs.forEach((docSnap) => {
+        const cita = docSnap.data();
 
-  snapshot.docs.forEach((docSnap) => {
-    const cita = docSnap.data();
+        // ✅ Usar fechaCita (ISO string) en lugar de cita.fecha (solo fecha)
+        const fechaCita = new Date(cita.fechaCita);
+        const diffMs = fechaCita.getTime() - ahora.getTime();
+        const diffMin = Math.floor(diffMs / 60000);
 
-    const fechaCita = new Date(cita.fechaCita);
-    const diffMs = fechaCita.getTime() - ahora.getTime();
-    const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin <= 240 && diffMin > 0 && !cita.recordatorioMostrado) {
+          const horas = Math.floor(diffMin / 60);
+          const minutos = diffMin % 60;
+          const tiempoTexto =
+            horas > 0
+              ? `${horas} hora(s) y ${minutos} min`
+              : `${minutos} min`;
 
-    // 🔴 ACTIVA PUNTO ROJO
-    if (diffMin <= 240 && diffMin > 0) {
-      hayAlerta = true;
-    }
-    
-    if (diffMin <= 120 && diffMin > 0) {
-      hayAlerta = true;
-    }
-
-    if (diffMin <= 40 && diffMin > 0) {
-      hayAlerta = true;
-    }
-
-    if (diffMin <= 5 && diffMin > 0) {
-      hayAlerta = true;
-    }
-
-    // ⏰ RECORDATORIO EN LISTA
-    if (diffMin <= 240 && diffMin > 0 && !cita.recordatorioMostrado) {
-
-      const horas = Math.floor(diffMin / 60);
-      const minutos = diffMin % 60;
-
-      let tiempoTexto =
-        horas > 0
-          ? `${horas} hora(s) y ${minutos} min`
-          : `${minutos} min`;
-
-      data.push({
-        id: docSnap.id,
-        titulo: "⏰ Recordatorio de cita",
-        mensaje: `Faltan ${tiempoTexto} para la cita con ${cita.nombrePaciente}`,
-        fecha: cita.fecha,
-        leido: false,
-        tipo: "cita",
+          data.push({
+            id: docSnap.id,
+            titulo: "⏰ Recordatorio de cita",
+            mensaje: `Faltan ${tiempoTexto} para la cita con ${cita.nombrePaciente}`,
+            fecha: cita.fecha,
+            leido: false,
+            tipo: "cita",
+          });
+        }
       });
-    }
-  });
 
-  setNotificaciones(data);
-  });
+      setNotificaciones(data);
+    });
 
-  return () => unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   const marcarComoLeido = (id: string) => {
     setNotificaciones((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, leido: true } : n
-      )
+      prev.map((n) => (n.id === id ? { ...n, leido: true } : n))
     );
   };
 
@@ -119,14 +93,13 @@ export default function Notificaciones() {
   const HeaderOla = () => (
     <>
       <View style={styles.containerSvg}>
-        <Svg width={width} height={220}>
+        <Svg width={width} height={220} viewBox={`0 0 ${width} 220`}>
           <Defs>
             <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-              <Stop offset="0" stopColor="#1E5FA8" />
-              <Stop offset="1" stopColor="#2FA4D6" />
+              <Stop offset="0" stopColor="#1E5FA8" stopOpacity="1" />
+              <Stop offset="1" stopColor="#2FA4D6" stopOpacity="1" />
             </SvgLinearGradient>
           </Defs>
-
           <Path
             d={`M0 0 H${width} V150 C${width} 150 ${width * 0.7} 220 ${
               width * 0.5
@@ -135,12 +108,9 @@ export default function Notificaciones() {
           />
         </Svg>
       </View>
-
       <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>Recordatorio</Text>
-        <Text style={styles.headerSubtitle}>
-          Centro de alertas y actividad
-        </Text>
+        <Text style={styles.headerTitle}>Recordatorios</Text>
+        <Text style={styles.headerSubtitle}>Centro de alertas y actividad</Text>
       </View>
     </>
   );
@@ -148,61 +118,44 @@ export default function Notificaciones() {
   return (
     <View style={styles.mainContainer}>
       <HeaderOla />
-
       <ScrollView>
         <View style={styles.content}>
-
-          <View style={styles.topRow}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.back}>Atrás</Text>
-            </TouchableOpacity>
-          </View>
-
-          {notificaciones.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.cardSection,
-                !item.leido && styles.noLeido,
-              ]}
-              onPress={() => marcarComoLeido(item.id)}
-            >
-              <View style={styles.optionRow}>
-
-                <View style={styles.optionLeft}>
-                  <Ionicons
-                    name={getIcon(item.tipo)}
-                    size={22}
-                    color={getColor(item.tipo)}
-                  />
-
-                  <View style={{ marginLeft: 10 }}>
-                    <Text style={styles.title}>
-                      {item.titulo}
-                    </Text>
-                    <Text style={styles.message}>
-                      {item.mensaje}
-                    </Text>
-                    <Text style={styles.date}>
-                      {item.fecha}
-                    </Text>
+          {notificaciones.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="notifications-off-outline" size={48} color="#9ca3af" />
+              <Text style={styles.emptyText}>No hay recordatorios próximos</Text>
+            </View>
+          ) : (
+            notificaciones.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[styles.cardSection, !item.leido && styles.noLeido]}
+                onPress={() => marcarComoLeido(item.id)}
+              >
+                <View style={styles.optionRow}>
+                  <View style={styles.optionLeft}>
+                    <Ionicons
+                      name={getIcon(item.tipo)}
+                      size={22}
+                      color={getColor(item.tipo)}
+                    />
+                    <View style={{ marginLeft: 10, flex: 1 }}>
+                      <Text style={styles.title}>{item.titulo}</Text>
+                      <Text style={styles.message}>{item.mensaje}</Text>
+                      <Text style={styles.date}>{item.fecha}</Text>
+                    </View>
                   </View>
+                  {!item.leido && <View style={styles.dot} />}
                 </View>
-
-                {!item.leido && (
-                  <View style={styles.dot} />
-                )}
-              </View>
-            </TouchableOpacity>
-          ))}
-
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </ScrollView>
     </View>
   );
 }
 
-/* ESTILOS (IGUAL QUE EL TUYO) */
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: "#f5f6fa" },
 
@@ -231,17 +184,8 @@ const styles = StyleSheet.create({
 
   content: {
     paddingHorizontal: 20,
+    paddingTop: 35,
     paddingBottom: 30,
-  },
-
-  topRow: {
-    marginTop: 35,
-    marginBottom: 15,
-  },
-
-  back: {
-    color: "#1E88E5",
-    fontWeight: "700",
   },
 
   cardSection: {
@@ -250,6 +194,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: "#fff",
     elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.07,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
 
   noLeido: {
@@ -290,5 +238,18 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: "#1E88E5",
+    marginLeft: 8,
+  },
+
+  emptyContainer: {
+    alignItems: "center",
+    marginTop: 60,
+    gap: 12,
+  },
+
+  emptyText: {
+    color: "#6b7280",
+    fontSize: 15,
+    textAlign: "center",
   },
 });

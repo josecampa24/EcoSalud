@@ -244,7 +244,7 @@ export default function Perfil() {
 
     Alert.alert("Éxito", "Firma eliminada");
   } catch (error) {
-    console.log(error);
+    
     Alert.alert("Error", "No se pudo borrar la firma");
   }
   };
@@ -309,7 +309,7 @@ export default function Perfil() {
       }
     }
   } catch (error) {
-    console.log(error);
+    
     Alert.alert("Error", "No se pudo subir la imagen");
   }
   };
@@ -346,12 +346,12 @@ export default function Perfil() {
           firma: json.secure_url, // 🔥 siempre reemplaza
         });
       }
-      console.log("FIRMA GUARDADA EN FIREBASE:", json.secure_url);
+      
 
       return json.secure_url;
     }
   } catch (error) {
-    console.log(error);
+    
     Alert.alert("Error", "No se pudo guardar la firma");
   }
 
@@ -387,7 +387,7 @@ export default function Perfil() {
 
     Alert.alert("Éxito", "Información actualizada");
   } catch (error) {
-    console.log(error);
+    
     Alert.alert("Error", "No se pudo guardar");
   }
   };
@@ -397,7 +397,7 @@ export default function Perfil() {
       await signOut(getAuth());
       router.replace("/");
     } catch (error) {
-      console.log(error);
+      
     }
   };
 

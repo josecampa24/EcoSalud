@@ -639,7 +639,7 @@ const payload = {
   createdAt: serverTimestamp(),
 };
 
-console.log("PAYLOAD FIRESTORE:", payload);
+
 
 batch.set(refRegistro, payload);
 
@@ -661,7 +661,6 @@ batch.set(refRegistro, payload);
   router.replace("/tabs/citas");
 
 } catch (error) {
-  console.error("ERROR COMPLETO:", error);
   Alert.alert("Error", "No se pudo guardar el registro");
 
 } finally {
@@ -705,7 +704,7 @@ batch.set(refRegistro, payload);
       estado,
     });
   } catch (error) {
-    console.log("Error actualizando estado:", error);
+    Alert.alert("Error", "No se pudo actualizar el estado");
   }
   };
 

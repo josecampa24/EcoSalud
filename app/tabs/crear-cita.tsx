@@ -303,7 +303,7 @@ export default function CrearCita() {
         router.back();
 
     } catch (error) {
-      console.log(error);
+      Alert.alert("Error", "No se pudo guardar la cita");
       Alert.alert("Error", "No se pudo crear la cita");
     }
   };

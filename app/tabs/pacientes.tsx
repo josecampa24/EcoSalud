@@ -51,11 +51,11 @@ export default function Registros() {
 
   function SvgTop() {
     return (
-      <Svg width={width} height={220}>
+      <Svg width={width} height={220} viewBox={`0 0 ${width} 220`}>
         <Defs>
           <SvgLinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#1E5FA8" />
-            <Stop offset="1" stopColor="#2FA4D6" />
+            <Stop offset="0" stopColor="#1E5FA8" stopOpacity="1" />
+            <Stop offset="1" stopColor="#2FA4D6" stopOpacity="1" />
           </SvgLinearGradient>
         </Defs>
         <Path
@@ -244,6 +244,15 @@ export default function Registros() {
     ]);
   };
 
+  const renderRightActions = (item: Registro) => (
+    <TouchableOpacity
+      style={styles.deleteSwipe}
+      onPress={() => eliminarPaciente(item)}
+    >
+      <Ionicons name="trash" size={24} color="#fff" />
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.mainContainer}>
       <View style={styles.containerSvg}>
@@ -255,18 +264,92 @@ export default function Registros() {
           <Text style={styles.title}>Lista de Pacientes</Text>
         </View>
 
+        {/* Barra de búsqueda */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#6b7280" />
+          <TextInput
+            placeholder="Buscar paciente..."
+            placeholderTextColor="#6b7280"
+            value={busqueda}
+            onChangeText={setBusqueda}
+            style={styles.searchInput}
+          />
+          <TouchableOpacity onPress={() => setMostrarPicker(true)}>
+            <Ionicons
+              name="calendar-outline"
+              size={22}
+              color={fechaFiltro ? "#1E88E5" : "#6b7280"}
+            />
+          </TouchableOpacity>
+          {fechaFiltro && (
+            <TouchableOpacity onPress={() => setFechaFiltro(null)} style={{ marginLeft: 8 }}>
+              <Ionicons name="close-circle" size={20} color="#ef4444" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {mostrarPicker && (
+          <DateTimePicker
+            value={fechaFiltro || new Date()}
+            mode="date"
+            display="default"
+            onChange={(_, date) => {
+              setMostrarPicker(false);
+              if (date) setFechaFiltro(date);
+            }}
+          />
+        )}
+
         <FlatList
           data={registrosFiltrados}
           keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 40 }}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No hay pacientes registrados</Text>
+          }
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() =>
-                router.push(`/patient-profile?id=${item.pacienteId}`)
-              }
-            >
-              <Text style={styles.nombre}>{item.nombre}</Text>
-            </TouchableOpacity>
+            <Swipeable renderRightActions={() => renderRightActions(item)}>
+              <TouchableOpacity
+                style={styles.card}
+                onPress={() =>
+                  router.push(`/patient-profile?id=${item.pacienteId}`)
+                }
+              >
+                <View style={styles.row}>
+                  <View style={styles.avatar}>
+                    {item.foto ? (
+                      <Image source={{ uri: item.foto }} style={styles.avatarImg} />
+                    ) : (
+                      <Ionicons name="person" size={24} color="#fff" />
+                    )}
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.nombre}>{item.nombre}</Text>
+                    <Text style={styles.fecha}>
+                      {item.edad} {item.unidadEdad || "años"}
+                    </Text>
+                    {item.createdAt && (
+                      <Text style={styles.fecha}>
+                        📅{" "}
+                        {new Date(item.createdAt.seconds * 1000).toLocaleDateString("es-MX")}
+                      </Text>
+                    )}
+                    {item.esCompartido && (
+                      <View style={styles.sharedBadge}>
+                        <Ionicons name="people-outline" size={11} color="#1E88E5" />
+                        <Text style={styles.sharedBadgeText}>
+                          Compartido por {item.compartidoPor}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+                </View>
+              </TouchableOpacity>
+            </Swipeable>
           )}
         />
       </SafeAreaView>
@@ -295,7 +378,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     elevation: 2,
-    marginTop: 20,
+    marginTop: 70,
   },
 
   searchInput: {
@@ -312,11 +395,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  cardDuplicado: {
-    borderWidth: 2,
-    borderColor: "#f59e0b",
-  },
-
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -326,7 +404,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#9ca3af",
+    backgroundColor: "#1E88E5",
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
@@ -351,12 +429,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  dupText: {
-    color: "#f59e0b",
-    fontWeight: "600",
-    marginTop: 4,
-  },
-
   deleteSwipe: {
     backgroundColor: "#ef4444",
     justifyContent: "center",
@@ -378,7 +450,7 @@ const styles = StyleSheet.create({
   },
 
   headerContent: {
-    marginTop: 100,
+    marginTop: 50,
     alignItems: "center",
     marginBottom: 15,
   },
@@ -386,6 +458,13 @@ const styles = StyleSheet.create({
   subtitle: {
     color: "#e0f2fe",
     fontSize: 13,
+  },
+
+  emptyText: {
+    textAlign: "center",
+    marginTop: 30,
+    color: "#6b7280",
+    fontSize: 14,
   },
 
   sharedBadge: {
