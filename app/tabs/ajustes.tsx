@@ -47,7 +47,7 @@ export default function Notificaciones() {
         const diffMs = fechaCita.getTime() - ahora.getTime();
         const diffMin = Math.floor(diffMs / 60000);
 
-        if (diffMin <= 240 && diffMin > 0 && !cita.recordatorioMostrado) {
+        if (diffMin <= 1440 && diffMin > 0 && !cita.recordatorioMostrado) {
           const horas = Math.floor(diffMin / 60);
           const minutos = diffMin % 60;
           const tiempoTexto =
