@@ -11,7 +11,7 @@ import {
   serverTimestamp,
   updateDoc,
   where,
-  writeBatch,
+  writeBatch
 } from "firebase/firestore";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -51,6 +51,14 @@ export default function NuevoRegistro() {
   const navigation = useNavigation();
   const [pacienteId, setPacienteId] = useState<string | null>(null);
   const [citaEstado, setCitaEstado] = useState<string | null>(null);
+  useEffect(() => {
+  if (citaEstado === "atendido") {
+    setPacienteId(null);
+    setModoSeleccion(true);
+
+    limpiarFormulario();
+  }
+}, [citaEstado]);
   const finalPacienteId = pacienteIdParam ?? pacienteId;
   const [nombre, setNombre] = useState("");
   const [edad, setEdad] = useState("");
@@ -207,6 +215,7 @@ export default function NuevoRegistro() {
     subtitulo: string;
   }) => (
 
+    
     <>
       <View style={styles.containerSvg}>
         <Svg width={width} height={220} viewBox={`0 0 ${width} 220`}>
@@ -343,12 +352,29 @@ export default function NuevoRegistro() {
 
    useFocusEffect(
     useCallback(() => {
-    // 🔥 SOLO limpiar si NO vienes desde citas
-    if (!pacienteIdParam) {
-      limpiarFormulario();
-      setModoSeleccion(true);
-      setBusquedaPaciente("");
-    }
+      // 🔥 Si NO hay pacienteId en params, limpiar TODO
+      if (!pacienteIdParam) {
+        // Limpiar estados del formulario
+        setPacienteId(null);
+        setNombre("");
+        setEdad("");
+        setUnidadEdad("años");
+        setAltura("");
+        setPeso("");
+        setTemperatura("");
+        setPresion("");
+        setSintomasSeleccionados([]);
+        setOtrosSintomas("");
+        setDiagnostico("");
+        setRecomendaciones("");
+        setImagen(null);
+        
+        // Limpiar UI
+        limpiarFormulario();
+        setModoSeleccion(true);
+        setBusquedaPaciente("");
+        setErrores({});
+      }
     }, [pacienteIdParam])
     );
 
@@ -457,17 +483,17 @@ export default function NuevoRegistro() {
     };
 
     useEffect(() => {
-    if (citaEstado === "atendido") {
-    router.replace({
-      pathname:"/tabs/citas", 
-      params: { enConsulta: "false" }, // 🔥 FORZAR RESET
-    });
-    }
+    if (citaEstado === "atendido" || citaEstado === null) {
+  router.push({
+    pathname: "/tabs/citas",
+    params: { enConsulta: "false" },
+  });
+}
     }, [citaEstado]);
 
   const crearNuevoPaciente = () => {
   // 🔥 SOLO bloquear si realmente hay paciente en consulta
-  if (citaEstado === "en consulta" && pacienteIdParam) {
+  if (citaEstado === "en consulta") {
     Alert.alert(
       "Consulta en curso",
       "Debes finalizar la consulta actual antes de crear un nuevo paciente"
@@ -653,12 +679,36 @@ batch.set(refRegistro, payload);
 
   Alert.alert("Éxito", "Registro guardado correctamente");
 
+  // 🔥 limpiar TODO
   setPacienteId(null);
   setModoSeleccion(true);
-   limpiarFormulario();
-   setCitaEstado(null); // 🔥 limpia estado local
+  setBusquedaPaciente("");
+  setImagen(null);
 
-  router.replace("/tabs/citas");
+  setNombre("");
+  setEdad("");
+  setUnidadEdad("años");
+  setAltura("");
+  setPeso("");
+  setTemperatura("");
+  setPresion("");
+
+  setSintomasSeleccionados([]);
+  setOtrosSintomas("");
+  setDiagnostico("");
+  setRecomendaciones("");
+
+  setErrores({});
+
+  // 🔥 limpiar estados críticos
+  setCitaEstado(null);
+
+  // 🔥 reset navegación - SIN parámetros para evitar que los datos se carguen de nuevo
+  setTimeout(() => {
+    router.replace({
+      pathname: "/tabs/citas",
+    });
+  }, 500);
 
 } catch (error) {
   Alert.alert("Error", "No se pudo guardar el registro");
@@ -813,7 +863,16 @@ batch.set(refRegistro, payload);
 
           {!modoSeleccion && (
           <View style = { styles.backContainer}>
-            <TouchableOpacity onPress={() => setModoSeleccion(true)}>
+            <TouchableOpacity
+  onPress={() => {
+    if (citaEstado !== "en consulta") {
+      limpiarFormulario();
+      setPacienteId(null);
+    }
+
+    setModoSeleccion(true);
+  }}
+>
               <Text style={styles.back}>Atrás</Text>
             </TouchableOpacity>
           </View>
