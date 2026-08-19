@@ -3,6 +3,7 @@
 EcoSalud es una aplicación móvil de gestión de expedientes clínicos, desarrollada con React Native y TypeScript, que permite administrar pacientes, registrar consultas y mantener un historial clínico utilizando servicios en la nube.
 
 📱 Funcionalidades
+
 Registro y autenticación de usuarios.
 Creación y administración de pacientes.
 Registro de consultas médicas.
@@ -15,7 +16,9 @@ Carga de fotografías de pacientes.
 Generación y compartición de expedientes en PDF.
 Compartición de pacientes entre usuarios.
 Manejo de información en tiempo real mediante Firebase Firestore.
+
 🛠️ Tecnologías utilizadas
+
 React Native — Desarrollo de la aplicación móvil.
 TypeScript — Lenguaje principal del proyecto.
 Expo — Entorno y herramientas para desarrollo, pruebas y compilación.
