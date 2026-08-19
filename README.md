@@ -1,51 +1,36 @@
+🩺 EcoSalud
 
-# Welcome to your Expo app 👋
+EcoSalud es una aplicación móvil de gestión de expedientes clínicos, desarrollada con React Native y TypeScript, que permite administrar pacientes, registrar consultas y mantener un historial clínico utilizando servicios en la nube.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+📱 Funcionalidades
+Registro y autenticación de usuarios.
+Creación y administración de pacientes.
+Registro de consultas médicas.
+Historial clínico por paciente.
+Gestión y programación de citas.
+Estados de citas: pendiente, en espera, en consulta, atendida y cancelada.
+Búsqueda de pacientes y síntomas.
+Registro de signos vitales, síntomas, diagnóstico y recomendaciones.
+Carga de fotografías de pacientes.
+Generación y compartición de expedientes en PDF.
+Compartición de pacientes entre usuarios.
+Manejo de información en tiempo real mediante Firebase Firestore.
+🛠️ Tecnologías utilizadas
+React Native — Desarrollo de la aplicación móvil.
+TypeScript — Lenguaje principal del proyecto.
+Expo — Entorno y herramientas para desarrollo, pruebas y compilación.
+Expo Router — Navegación entre pantallas.
+Firebase Authentication — Autenticación de usuarios mediante correo y contraseña.
+Firebase Firestore — Base de datos NoSQL en la nube y sincronización de información en tiempo real.
+Cloudinary — Almacenamiento de imágenes.
+Expo Print / Sharing — Generación y compartición de expedientes en formato PDF.
+React Native Calendars — Calendario para gestión y visualización de citas.
+EAS Build — Generación de la aplicación para Android.
 
-## Get started
+📂 Arquitectura general
 
-1. Install dependencies
+La aplicación utiliza una arquitectura basada en componentes y pantallas de React Native. Firebase proporciona los servicios de autenticación y almacenamiento de información, mientras que Firestore permite mantener sincronizados los datos de pacientes, consultas y citas.
 
-   ```bash
-   npm install
-   ```
+🎓 Contexto
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Proyecto desarrollado en 2026 como parte de la carrera de Ingeniería en Tecnología de Software.
